@@ -298,13 +298,16 @@ function enterStep(i) {
   $("actionBtn").disabled = true;
   const dwell = s.id === "reveal" ? 0 : 2500;
   if (s.id === "reveal") {
-    // Advances automatically on detection; manual confirm unlocks late.
+    // Advances automatically on detection; manual confirm unlocks as a
+    // fallback. If detection is unavailable, offer it quickly so the
+    // buyer is never stuck waiting on a model that will not answer.
+    const fallbackMs = modelsReady === true ? 15000 : 3000;
     setTimeout(() => {
       if (state.step === 2 && !state.detection.done) {
         $("actionBtn").textContent = t("confirmManual");
         $("actionBtn").disabled = false;
       }
-    }, 15000);
+    }, fallbackMs);
   } else if (s.id !== "sign") {
     setTimeout(() => { if (state.step === i) $("actionBtn").disabled = false; }, dwell);
   }

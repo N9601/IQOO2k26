@@ -109,7 +109,7 @@
     <div class="videobox">
       <video id="cam" autoplay playsinline muted></video>
       <canvas id="overlay" class="overlay"></canvas>
-      <div class="stepbanner">
+      <div class="stepbanner" role="status" aria-live="polite">
         <div class="stepname" id="stepName">Position the sealed parcel</div>
         <div class="stephint" id="stepHint">Show all sides of the tamper seal to the camera.</div>
       </div>
@@ -125,7 +125,7 @@
       <button class="btn danger small" id="abortBtn">Abort</button>
       <button class="btn primary" id="actionBtn">Seal is intact</button>
     </div>
-    <p class="sub" id="liveStatus" style="margin-top:10px"></p>
+    <p class="sub" id="liveStatus" style="margin-top:10px" role="status" aria-live="polite"></p>
     <div class="card" id="simNote">
       <h3>Simulation mode</h3>
       <p class="sub">No camera is available, so a synthetic unboxing feed is being generated locally. Every other part of the pipeline (hash chain, detection, OCR, signing) runs exactly as it would on a real camera.</p>
