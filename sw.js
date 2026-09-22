@@ -3,7 +3,7 @@
  * Evidence is produced entirely offline; only manifest delivery needs a
  * network, and that can happen later. */
 
-const CACHE = "truthbox-v5";
+const CACHE = "truthbox-v6";
 const CORE = [
   "./",
   "./index.html",

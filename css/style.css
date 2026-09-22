@@ -65,9 +65,9 @@ h1, h2 { font-family: var(--serif); font-weight: 400; letter-spacing: -0.01em; t
 .logo { display: flex; align-items: center; gap: 10px; text-decoration: none; color: var(--text); font-weight: 600; letter-spacing: 0.05em; font-size: 14px; flex: 0 0 auto; }
 .topbar { gap: 10px; }
 .logo .mark {
-  width: 26px; height: 26px; border-radius: 8px;
-  background: linear-gradient(135deg, var(--brand), #1d6b43);
-  display: grid; place-items: center; font-size: 14px; color: #0a1410; font-weight: 700;
+  width: 28px; height: 28px; border-radius: 8px;
+  background: url("../icons/icon.svg") center / cover no-repeat;
+  font-size: 0;
 }
 .topbar nav {
   display: flex; gap: 4px;
