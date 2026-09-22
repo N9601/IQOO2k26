@@ -16,12 +16,45 @@ import { loadOcr, readLabel } from "./ocr.js";
 
 const $ = (id) => document.getElementById(id);
 
+/* Buyer-facing strings, English and Hindi. The buyer picks a language
+ * on the setup screen; evidence and manifests stay English for the
+ * seller and dispute side. */
+const I18N = {
+  en: {
+    sealName: "Seal check", sealBanner: "Position the sealed parcel", sealHint: "Show all sides of the tamper seal to the camera.", sealAction: "Seal is intact",
+    openName: "Opening", openBanner: "Open the parcel on camera", openHint: "Keep the parcel in frame while you open it. Do not cut away.", openAction: "Parcel is open",
+    revealName: "Item reveal", revealBanner: "Show the item to the camera", revealHint: "Hold the item steady in frame. Detection runs on-device.", revealAction: "Waiting for detection...",
+    labelName: "Label OCR", labelBanner: "Position the serial label", labelHint: "Fit the serial or MRP label inside the dashed target.", labelAction: "Read label",
+    signName: "Sign", signBanner: "Sealing the evidence", signHint: "Computing Merkle root and signing with the device key.", signAction: "Signing...",
+    confirmManual: "Confirm item manually", reading: "Reading on-device...", noText: "No text found. Move closer to the label and try again.",
+    detected: "Detected: {label} ({pct}%)", matches: " - matches expected SKU class", expected: " - expected {cls}",
+    setupTitle: "Verified unboxing", begin: "Begin capture", scanQr: "Scan dispatch QR instead", abort: "Abort",
+    modelsLoaded: "On-device models loaded. Nothing you record will leave this phone.",
+  },
+  hi: {
+    sealName: "सील जांच", sealBanner: "सीलबंद पार्सल कैमरे के सामने रखें", sealHint: "टैम्पर सील के सभी किनारे कैमरे को दिखाएं।", sealAction: "सील सही सलामत है",
+    openName: "खोलना", openBanner: "पार्सल कैमरे पर खोलें", openHint: "खोलते समय पार्सल फ्रेम में रखें। कैमरा हटाएं नहीं।", openAction: "पार्सल खुल गया है",
+    revealName: "सामान", revealBanner: "सामान कैमरे को दिखाएं", revealHint: "सामान को फ्रेम में स्थिर रखें। पहचान डिवाइस पर ही चलती है।", revealAction: "पहचान की प्रतीक्षा...",
+    labelName: "लेबल OCR", labelBanner: "सीरियल लेबल दिखाएं", labelHint: "सीरियल या MRP लेबल को डैश वाले बॉक्स में रखें।", labelAction: "लेबल पढ़ें",
+    signName: "हस्ताक्षर", signBanner: "सबूत सील किया जा रहा है", signHint: "मर्कल रूट बनाकर डिवाइस की से हस्ताक्षर हो रहा है।", signAction: "हस्ताक्षर हो रहा है...",
+    confirmManual: "सामान की पुष्टि खुद करें", reading: "डिवाइस पर पढ़ा जा रहा है...", noText: "कोई टेक्स्ट नहीं मिला। लेबल के पास जाकर दोबारा कोशिश करें।",
+    detected: "पहचाना: {label} ({pct}%)", matches: " - अपेक्षित SKU से मेल", expected: " - अपेक्षित: {cls}",
+    setupTitle: "सत्यापित अनबॉक्सिंग", begin: "कैप्चर शुरू करें", scanQr: "डिस्पैच QR स्कैन करें", abort: "रद्द करें",
+    modelsLoaded: "मॉडल डिवाइस पर लोड हो गए। आपकी कोई रिकॉर्डिंग फोन से बाहर नहीं जाएगी।",
+  },
+};
+
+let lang = "en";
+try { lang = localStorage.getItem("tb-lang") || "en"; } catch {}
+
+function t(key, vars) {
+  let s = (I18N[lang] && I18N[lang][key]) || I18N.en[key] || key;
+  for (const k in vars || {}) s = s.replace("{" + k + "}", vars[k]);
+  return s;
+}
+
 const STEPS = [
-  { id: "seal",   name: "Seal check",   banner: "Position the sealed parcel",  hint: "Show all sides of the tamper seal to the camera.", action: "Seal is intact" },
-  { id: "open",   name: "Opening",      banner: "Open the parcel on camera",   hint: "Keep the parcel in frame while you open it. Do not cut away.", action: "Parcel is open" },
-  { id: "reveal", name: "Item reveal",  banner: "Show the item to the camera", hint: "Hold the item steady in frame. Detection runs on-device.", action: "Waiting for detection..." },
-  { id: "label",  name: "Label OCR",    banner: "Position the serial label",   hint: "Fit the serial or MRP label inside the dashed target.", action: "Read label" },
-  { id: "sign",   name: "Sign",         banner: "Sealing the evidence",        hint: "Computing Merkle root and signing with the device key.", action: "Signing..." },
+  { id: "seal" }, { id: "open" }, { id: "reveal" }, { id: "label" }, { id: "sign" },
 ];
 
 const state = {
@@ -53,11 +86,38 @@ $("orderId").value = params.get("order") || "TB-2026-" + String(Math.floor(10000
 if (params.get("cls")) $("skuClass").value = params.get("cls");
 if (params.get("serial")) $("serialPattern").value = params.get("serial");
 
+function applyLang() {
+  document.querySelector("#setup h3").textContent = t("setupTitle");
+  $("startBtn").textContent = t("begin");
+  $("scanQrBtn").textContent = t("scanQr");
+  $("abortBtn").textContent = t("abort");
+  if (modelsReady === true) $("modelStatus").textContent = t("modelsLoaded");
+  $("langBtn").textContent = lang === "en" ? "हिंदी" : "English";
+}
+
+$("langBtn").addEventListener("click", () => {
+  lang = lang === "en" ? "hi" : "en";
+  try { localStorage.setItem("tb-lang", lang); } catch {}
+  applyLang();
+  if (state.step >= 0 && state.step < STEPS.length) {
+    // Re-label the live UI without re-entering the step (no timer resets).
+    const s = STEPS[state.step];
+    $("stepName").textContent = t(s.id + "Banner");
+    $("stepHint").textContent = t(s.id + "Hint");
+    if (!$("actionBtn").disabled) $("actionBtn").textContent = t(s.id + "Action");
+    buildStepsRail();
+    for (let k = 0; k < STEPS.length; k++) {
+      $("rail-" + k).className = "s" + (k < state.step ? " done" : k === state.step ? " active" : "");
+    }
+  }
+});
+
 let modelsReady = false;
+applyLang();
 Promise.all([loadDetector(), loadOcr()])
   .then(() => {
     modelsReady = true;
-    $("modelStatus").textContent = "On-device models loaded. Nothing you record will leave this phone.";
+    $("modelStatus").textContent = t("modelsLoaded");
   })
   .catch((e) => {
     $("modelStatus").textContent = "Model load failed (" + e.message + "). Capture still runs; detection and OCR will be marked unavailable.";
@@ -217,16 +277,16 @@ function startSimulation(video) {
 
 function buildStepsRail() {
   $("stepsRail").innerHTML = STEPS.map(
-    (s, i) => `<div class="s" id="rail-${i}">${s.name}</div>`
+    (s, i) => `<div class="s" id="rail-${i}">${t(s.id + "Name")}</div>`
   ).join("");
 }
 
 function enterStep(i) {
   state.step = i;
   const s = STEPS[i];
-  $("stepName").textContent = s.banner;
-  $("stepHint").textContent = s.hint;
-  $("actionBtn").textContent = s.action;
+  $("stepName").textContent = t(s.id + "Banner");
+  $("stepHint").textContent = t(s.id + "Hint");
+  $("actionBtn").textContent = t(s.id + "Action");
   $("ocrTarget").style.display = s.id === "label" ? "block" : "none";
   for (let k = 0; k < STEPS.length; k++) {
     const el = $("rail-" + k);
@@ -239,7 +299,7 @@ function enterStep(i) {
     // Advances automatically on detection; manual confirm unlocks late.
     setTimeout(() => {
       if (state.step === 2 && !state.detection.done) {
-        $("actionBtn").textContent = "Confirm item manually";
+        $("actionBtn").textContent = t("confirmManual");
         $("actionBtn").disabled = false;
       }
     }, 15000);
@@ -322,7 +382,9 @@ async function runDetection() {
     state.detection.best = { label: top.label, score: +top.score.toFixed(3) };
   }
   const match = top.label === state.order.expectedClass;
-  $("liveStatus").textContent = `Detected: ${top.label} (${Math.round(top.score * 100)}%)` + (match ? " - matches expected SKU class" : ` - expected ${state.order.expectedClass}`);
+  $("liveStatus").textContent =
+    t("detected", { label: top.label, pct: Math.round(top.score * 100) }) +
+    (match ? t("matches") : t("expected", { cls: state.order.expectedClass }));
   state.detection.hits = match ? state.detection.hits + 1 : 0;
   if (state.detection.hits >= 2) {
     state.detection.done = true;
@@ -368,7 +430,7 @@ function drawOverlay(preds) {
 async function doOcr() {
   const video = $("cam");
   $("actionBtn").disabled = true;
-  $("actionBtn").textContent = "Reading on-device...";
+  $("actionBtn").textContent = t("reading");
   const vw = video.videoWidth, vh = video.videoHeight;
   // Crop matches the dashed target: middle band of the frame.
   const crop = document.createElement("canvas");
@@ -385,8 +447,8 @@ async function doOcr() {
   state.ocr = { ...result, matchedSerial: matched };
 
   if (!result.raw && !state.simulated) {
-    $("liveStatus").textContent = "No text found. Move closer to the label and try again.";
-    $("actionBtn").textContent = "Read label";
+    $("liveStatus").textContent = t("noText");
+    $("actionBtn").textContent = t("labelAction");
     $("actionBtn").disabled = false;
     if (!state.ocrRetries) state.ocrRetries = 0;
     if (++state.ocrRetries < 3) return; // after 3 attempts, proceed with empty OCR
