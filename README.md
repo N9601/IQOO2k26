@@ -14,7 +14,9 @@ Return fraud costs Indian D2C brands an estimated Rs 3,500 Cr per year. Empty-bo
 
 ## Try it
 
-Static site, no build step, no server-side code.
+Live: https://n9601.github.io/IQOO2k26/
+
+Or locally (static site, no build step, no server-side code):
 
 ```
 python -m http.server 8080
@@ -25,6 +27,15 @@ Then open http://localhost:8080 on a phone or laptop.
 - `capture.html` - buyer-side guided unboxing capture
 - `verify.html` - drop a manifest, verify the signature and hash chain; edit one byte and watch it fail
 - `dashboard.html` - seller portal: orders, QR labels, verification analytics
+
+## Demo script (3 minutes)
+
+1. **Seller portal.** Open the dashboard, generate a dispatch QR for an order. Point out the one-time nonce that defeats replay attacks.
+2. **Verified unboxing.** Scan the QR with a phone (or open the link). The capture flow opens bound to that order. Walk the five steps: seal check, opening, item reveal (live on-device detection draws the bounding box), label OCR, sign. The ticker at the bottom shows frames being hashed into the chain in real time.
+3. **The manifest.** Download the signed manifest. Open the verifier, drop it in: five green checks, including a recomputed Merkle root and a valid ECDSA P-256 signature.
+4. **The kill shot.** In the tamper lab, click "Change the serial that was read". Verification flips to EVIDENCE REJECTED instantly. Try "Silently remove 10 frames": the Merkle root breaks. Restore the original: green again. This is why a Truthbox manifest settles disputes and a WhatsApp video does not.
+
+No camera available? The capture page drops into a clearly labeled simulation mode with a synthetic feed; every other stage (hashing, detection, OCR, signing) runs unchanged. The verifier can also generate a genuinely signed demo manifest on the spot.
 
 ## Architecture
 
