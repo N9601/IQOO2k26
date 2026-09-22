@@ -28,6 +28,23 @@
   .bigverdict p { color: var(--text-dim); font-size: 13px; }
   .tamperbtns { display: flex; flex-wrap: wrap; gap: 8px; margin: 12px 0; }
   #manifestMeta { margin-top: 14px; }
+  .viz-strip { display: flex; flex-wrap: wrap; gap: 3px; margin-top: 14px; }
+  .viz-strip .fr {
+    width: 14px; height: 14px; border-radius: 3px;
+    background: var(--brand-soft); border: 1px solid rgba(63, 191, 127, 0.45);
+  }
+  .viz-strip .fr.bad { background: var(--danger-soft); border-color: var(--danger); }
+  .viz-strip .fr.warn { background: var(--warn-soft); border-color: rgba(217, 154, 78, 0.6); }
+  .viz-tail {
+    display: flex; align-items: center; gap: 8px; margin-top: 12px;
+    font-family: var(--mono); font-size: 11px; flex-wrap: wrap;
+  }
+  .viz-tail .node {
+    padding: 6px 12px; border-radius: 999px; border: 1px solid rgba(63, 191, 127, 0.5);
+    color: var(--brand); background: var(--brand-soft);
+  }
+  .viz-tail .node.bad { border-color: var(--danger); color: var(--danger); background: var(--danger-soft); }
+  .viz-tail .lnk { color: var(--faint); }
 </style>
 </head>
 <body>
@@ -59,6 +76,12 @@
       <div><h2 id="verdictText"></h2><p id="verdictDetail"></p></div>
     </div>
     <div class="grid" id="checkList"></div>
+    <div class="card" id="chainViz" style="margin-top:14px">
+      <h3>Chain of custody, visualized</h3>
+      <p class="sub">One cell per hashed frame. Each links to the one before it; the Merkle root commits to all of them; the signature seals the root.</p>
+      <div class="viz-strip" id="vizStrip"></div>
+      <div class="viz-tail" id="vizTail"></div>
+    </div>
     <div class="card" id="manifestMeta"></div>
   </section>
 

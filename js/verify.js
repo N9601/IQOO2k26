@@ -112,6 +112,8 @@ async function render() {
       <div><div class="name">${r.check}</div><div class="detail">${r.detail}</div></div>
     </div>`).join("");
 
+  renderViz(results);
+
   const m = current;
   $("manifestMeta").innerHTML = `
     <h3>Manifest</h3>
@@ -124,6 +126,42 @@ serial     ${m.verdict?.serial ?? "none"}
 merkle     ${m.chain?.merkleRoot ?? "?"}
 key        ${m.signature?.publicKeyJwk?.x?.slice(0, 24) ?? "?"}...
 signature  ${m.signature?.value?.slice(0, 44) ?? "?"}...</pre>`;
+}
+
+/* ---------- chain visualization ---------- */
+
+function renderViz(results) {
+  const by = Object.fromEntries(results.map((r) => [r.check, r.ok]));
+  const links = current.chain?.links || [];
+  const strip = $("vizStrip");
+  const N = Math.min(links.length, 96);
+  const step = links.length / N || 1;
+
+  // Localize what we can: the first monotonic-clock violation.
+  let badIdx = -1;
+  for (let i = 1; i < links.length; i++) {
+    if (links[i].m < links[i - 1].m) { badIdx = i; break; }
+  }
+  const merkleOk = by["Merkle root"] !== false;
+  const headOk = by["Chain head"] !== false;
+
+  let html = "";
+  for (let k = 0; k < N; k++) {
+    const i = Math.floor(k * step);
+    let cls = "fr";
+    if (badIdx >= 0 && i >= badIdx) cls += " bad";
+    else if (!merkleOk) cls += " warn";
+    else if (!headOk && k === N - 1) cls += " bad";
+    html += `<div class="${cls}" title="frame ${links[i].i}  ${links[i].h.slice(0, 12)}..."></div>`;
+  }
+  strip.innerHTML = html;
+
+  const sigOk = by["ECDSA signature"] !== false;
+  $("vizTail").innerHTML =
+    `<span class="lnk">${links.length} links -&gt;</span>` +
+    `<span class="node${merkleOk && headOk ? "" : " bad"}">MERKLE ROOT ${merkleOk && headOk ? "intact" : "BROKEN"}</span>` +
+    `<span class="lnk">-&gt;</span>` +
+    `<span class="node${sigOk ? "" : " bad"}">SIGNATURE ${sigOk ? "valid" : "INVALID"}</span>`;
 }
 
 /* ---------- tamper lab ---------- */
