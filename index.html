@@ -74,6 +74,7 @@
     <div class="cta">
       <a class="btn primary" href="capture.html">Start verified unboxing</a>
       <a class="btn" href="verify.html">Verify a manifest</a>
+      <button class="btn" id="installBtn" style="display:none">Install app</button>
     </div>
   </section>
 
@@ -133,6 +134,19 @@
 <footer>Truthbox - AR-verified unboxing - iQOO Hackathon 2026</footer>
 <script>
   if ("serviceWorker" in navigator) navigator.serviceWorker.register("sw.js").catch(() => {});
+  let installEvent = null;
+  window.addEventListener("beforeinstallprompt", (e) => {
+    e.preventDefault();
+    installEvent = e;
+    document.getElementById("installBtn").style.display = "inline-flex";
+  });
+  document.getElementById("installBtn").addEventListener("click", async () => {
+    if (!installEvent) return;
+    installEvent.prompt();
+    await installEvent.userChoice;
+    installEvent = null;
+    document.getElementById("installBtn").style.display = "none";
+  });
 </script>
 <script type="module">
   // Real hashing, not an animation: random frame-sized buffers chained
