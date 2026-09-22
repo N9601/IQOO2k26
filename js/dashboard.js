@@ -73,6 +73,11 @@ $("qrBtn").addEventListener("click", () => {
   url.searchParams.set("cls", $("qClass").value);
   url.searchParams.set("serial", $("qSerial").value.trim());
   url.searchParams.set("nonce", nonce);
+  if ($("qDimW").value.trim()) {
+    url.searchParams.set("dimw", $("qDimW").value.trim());
+    if ($("qDimH").value.trim()) url.searchParams.set("dimh", $("qDimH").value.trim());
+    url.searchParams.set("qrmm", $("qQrMm").value.trim() || "30");
+  }
   $("qrbox").innerHTML = "";
   new QRCode($("qrbox"), { text: url.href, width: 164, height: 164, correctLevel: QRCode.CorrectLevel.M });
   $("qrlink").textContent = url.href;

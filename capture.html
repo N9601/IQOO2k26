@@ -92,6 +92,8 @@
     <input type="text" id="serialPattern" value="[A-Z0-9]{6,}">
     <div class="spacer" style="height:16px"></div>
     <button class="btn primary" id="startBtn" style="width:100%">Begin capture</button>
+    <button class="btn" id="scanQrBtn" style="width:100%; margin-top:10px">Scan dispatch QR instead</button>
+    <p class="sub" id="qrScanStatus" style="margin-top:8px; display:none"></p>
     <p class="sub" id="modelStatus" style="margin-top:10px">Loading on-device models...</p>
   </section>
 
@@ -149,6 +151,7 @@
 <script src="https://cdn.jsdelivr.net/npm/@tensorflow/tfjs@4.20.0/dist/tf.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/@tensorflow-models/coco-ssd@2.2.3/dist/coco-ssd.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/tesseract.js@5.1.1/dist/tesseract.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/jsqr@1.4.0/dist/jsQR.js"></script>
 <script type="module" src="js/capture.js"></script>
 </body>
 </html>

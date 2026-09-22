@@ -76,6 +76,9 @@
           <option value="keyboard">Keyboard</option>
         </select></div>
       <div><label class="field" for="qSerial">Serial pattern</label><input type="text" id="qSerial" value="[A-Z0-9]{6,}"></div>
+      <div><label class="field" for="qDimW">SKU width (mm, optional)</label><input type="text" id="qDimW" inputmode="numeric" placeholder="e.g. 160"></div>
+      <div><label class="field" for="qDimH">SKU height (mm, optional)</label><input type="text" id="qDimH" inputmode="numeric" placeholder="e.g. 75"></div>
+      <div><label class="field" for="qQrMm">Printed QR size (mm)</label><input type="text" id="qQrMm" inputmode="numeric" value="30"></div>
     </div>
     <div class="spacer" style="height:14px"></div>
     <button class="btn primary" id="qrBtn">Generate QR label</button>

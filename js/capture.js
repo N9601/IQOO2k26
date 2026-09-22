@@ -37,6 +37,8 @@ const state = {
   startedAt: null,
   stepLog: [],
   detection: { best: null, hits: 0, done: false },
+  calib: { pxPerMm: null, qrMatched: false, samples: 0 },
+  measured: null,
   ocr: null,
   hashTimer: null,
   detectTimer: null,
@@ -66,16 +68,67 @@ $("startBtn").addEventListener("click", startCapture);
 $("actionBtn").addEventListener("click", onAction);
 $("abortBtn").addEventListener("click", () => location.reload());
 $("restartBtn").addEventListener("click", () => location.reload());
+$("scanQrBtn").addEventListener("click", scanDispatchQr);
+
+/* Scan the Truthbox QR printed on the parcel: decodes the capture URL
+ * and binds order id, SKU class, serial pattern and nonce in one shot. */
+async function scanDispatchQr() {
+  const status = $("qrScanStatus");
+  status.style.display = "block";
+  let stream;
+  try {
+    stream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: "environment", width: { ideal: 1280 } } });
+  } catch (e) {
+    status.textContent = "No camera available for scanning. Enter the order manually.";
+    return;
+  }
+  status.textContent = "Point the camera at the dispatch QR...";
+  $("scanQrBtn").disabled = true;
+  const video = document.createElement("video");
+  video.srcObject = stream;
+  video.muted = true;
+  await video.play().catch(() => {});
+  const c = document.createElement("canvas");
+  const stop = () => stream.getTracks().forEach((t) => t.stop());
+  const deadline = Date.now() + 30000;
+  const tick = () => {
+    if (Date.now() > deadline) { stop(); status.textContent = "No QR found in 30 seconds. Enter the order manually."; $("scanQrBtn").disabled = false; return; }
+    if (video.readyState >= 2) {
+      c.width = video.videoWidth; c.height = video.videoHeight;
+      const ctx = c.getContext("2d", { willReadFrequently: true });
+      ctx.drawImage(video, 0, 0);
+      const img = ctx.getImageData(0, 0, c.width, c.height);
+      const qr = jsQR(img.data, img.width, img.height, { inversionAttempts: "dontInvert" });
+      if (qr && qr.data.includes("capture.html?")) {
+        stop();
+        const p = new URL(qr.data).searchParams;
+        if (p.get("order")) $("orderId").value = p.get("order");
+        if (p.get("cls")) $("skuClass").value = p.get("cls");
+        if (p.get("serial")) $("serialPattern").value = p.get("serial");
+        state.scannedParams = p;
+        status.textContent = "Order bound from dispatch QR: " + (p.get("order") || "unknown") + ". Begin capture when ready.";
+        $("scanQrBtn").disabled = false;
+        return;
+      }
+    }
+    requestAnimationFrame(tick);
+  };
+  tick();
+}
 
 /* ---------- capture lifecycle ---------- */
 
 async function startCapture() {
   $("startBtn").disabled = true;
+  const p = state.scannedParams || params;
   state.order = {
     id: $("orderId").value.trim() || "TB-UNBOUND",
-    nonce: params.get("nonce") || hex(crypto.getRandomValues(new Uint8Array(16))),
+    nonce: p.get("nonce") || hex(crypto.getRandomValues(new Uint8Array(16))),
     expectedClass: $("skuClass").value,
     serialPattern: $("serialPattern").value.trim() || "[A-Z0-9]{6,}",
+    boundVia: state.scannedParams ? "qr-scan" : params.get("nonce") ? "qr-link" : "manual",
+    dims: p.get("dimw") ? { wMm: +p.get("dimw"), hMm: +p.get("dimh") || null, tolerancePct: 15 } : null,
+    qrMm: +(p.get("qrmm") || 30),
   };
 
   const video = $("cam");
@@ -220,12 +273,46 @@ function logStep(id, evidence) {
 
 /* ---------- detection ---------- */
 
+/* Planar dimension calibration: the dispatch QR has a known printed
+ * size (order.qrMm). When jsQR locates it in frame, its corner-to-corner
+ * pixel distance gives a px-per-mm scale, applied to the detection box.
+ * Valid while QR and item sit at a similar distance from the camera;
+ * the production Android build replaces this with ARCore Depth. */
+function calibrate(video) {
+  if (typeof jsQR === "undefined") return;
+  const c = calibrate.c || (calibrate.c = document.createElement("canvas"));
+  const scale = 0.5;
+  c.width = Math.round(video.videoWidth * scale);
+  c.height = Math.round(video.videoHeight * scale);
+  const ctx = c.getContext("2d", { willReadFrequently: true });
+  ctx.drawImage(video, 0, 0, c.width, c.height);
+  const img = ctx.getImageData(0, 0, c.width, c.height);
+  const qr = jsQR(img.data, img.width, img.height, { inversionAttempts: "dontInvert" });
+  if (!qr) return;
+  const { topLeftCorner: a, topRightCorner: b } = qr.location;
+  const sidePx = Math.hypot(b.x - a.x, b.y - a.y) / scale; // in video pixels
+  if (sidePx < 8) return;
+  state.calib.pxPerMm = sidePx / state.order.qrMm;
+  state.calib.samples++;
+  if (qr.data.includes(state.order.nonce)) state.calib.qrMatched = true;
+}
+
 async function runDetection() {
   if (state.step < 1 || state.step > 3) return;
   const video = $("cam");
   if (video.readyState < 2 || modelsReady !== true) return;
+  if (state.step >= 2) try { calibrate(video); } catch {}
   let preds = [];
   try { preds = await detect(video); } catch { return; }
+  if (state.step === 2 && preds[0] && state.calib.pxPerMm) {
+    const [, , w, h] = preds[0].box;
+    state.measured = {
+      wMm: Math.round(w / state.calib.pxPerMm),
+      hMm: Math.round(h / state.calib.pxPerMm),
+      calibSamples: state.calib.samples,
+      method: "planar-qr",
+    };
+  }
   drawOverlay(preds);
   if (state.step !== 2 || state.detection.done) return;
 
@@ -265,6 +352,14 @@ function drawOverlay(preds) {
     ctx.fillRect(x, Math.max(0, y - 24), tw, 24);
     ctx.fillStyle = "#06130c";
     ctx.fillText(label, x + 5, Math.max(16, y - 6));
+    if (p === preds[0] && state.measured) {
+      const dim = `~${state.measured.wMm} x ${state.measured.hMm} mm`;
+      ctx.fillStyle = "rgba(18, 18, 16, 0.85)";
+      const dw = ctx.measureText(dim).width + 10;
+      ctx.fillRect(x, y + h + 4, dw, 24);
+      ctx.fillStyle = "#3fbf7f";
+      ctx.fillText(dim, x + 5, y + h + 21);
+    }
   }
 }
 
@@ -322,15 +417,29 @@ async function finalize() {
   }
 
   const re = new RegExp(state.order.serialPattern);
+  let dimensionCheck = "unknown";
+  if (state.order.dims && state.measured) {
+    const tol = state.order.dims.tolerancePct / 100;
+    const within = (got, want) => want == null || Math.abs(got - want) <= want * tol;
+    // The box orientation is arbitrary: accept either axis assignment.
+    const a = within(state.measured.wMm, state.order.dims.wMm) && within(state.measured.hMm, state.order.dims.hMm);
+    const b = within(state.measured.hMm, state.order.dims.wMm) && within(state.measured.wMm, state.order.dims.hMm);
+    dimensionCheck = a || b ? "pass" : "fail";
+  }
   const verdict = {
     sealConfirmed: state.stepLog.some((s) => s.id === "seal"),
     skuMatch: state.detection.best ? state.detection.best.label === state.order.expectedClass : false,
     detectedAs: state.detection.best,
     serialMatch: !!(state.ocr && state.ocr.matchedSerial && re.test(state.ocr.matchedSerial)),
     serial: state.ocr ? state.ocr.matchedSerial : null,
+    dimensionCheck,
+    measuredMm: state.measured,
+    qrSeenDuringCapture: state.calib.qrMatched,
     simulatedFeed: state.simulated,
   };
-  verdict.overall = verdict.sealConfirmed && verdict.skuMatch && verdict.serialMatch ? "VERIFIED" : "FLAGGED";
+  verdict.overall =
+    verdict.sealConfirmed && verdict.skuMatch && verdict.serialMatch && dimensionCheck !== "fail"
+      ? "VERIFIED" : "FLAGGED";
 
   const manifest = {
     truthbox: "1.0",
@@ -344,7 +453,7 @@ async function finalize() {
       simulated: state.simulated,
     },
     steps: state.stepLog,
-    vision: { engine: "coco-ssd lite_mobilenet_v2 (tfjs)", detection: state.detection.best },
+    vision: { engine: "coco-ssd lite_mobilenet_v2 (tfjs)", detection: state.detection.best, measured: state.measured },
     ocr: state.ocr ? { engine: "tesseract.js 5 (wasm)", serialCandidates: state.ocr.serialCandidates, matchedSerial: state.ocr.matchedSerial, confidence: state.ocr.confidence } : null,
     video: videoInfo,
     chain: {
@@ -382,6 +491,10 @@ function showResult(m) {
     ["Chain of custody", true, `${m.capture.frameCount} frames hashed at 5 fps, unbroken`],
     ["Signature", true, "ECDSA P-256, key generated non-extractable for this capture"],
   ];
+  if (m.verdict.dimensionCheck !== "unknown") {
+    rows.splice(2, 0, ["Dimensions within tolerance", m.verdict.dimensionCheck === "pass",
+      `Measured ~${m.verdict.measuredMm.wMm} x ${m.verdict.measuredMm.hMm} mm vs SKU ${m.order.dims.wMm} x ${m.order.dims.hMm ?? "?"} mm (QR-calibrated)`]);
+  }
   $("verdictRows").innerHTML = rows.map(([name, ok2, detail]) => `
     <div class="checkrow ${ok2 ? "ok" : "fail"}">
       <span class="icon">${ok2 ? "&#10003;" : "&#10007;"}</span>
