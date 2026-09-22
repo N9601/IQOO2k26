@@ -193,6 +193,14 @@ label.field { display: block; font-size: 11px; color: var(--faint); margin-botto
 .muted { color: var(--text-dim); }
 .spacer { height: 24px; }
 
+/* Narrow phones: tighten the header so all nav links fit without overflow. */
+@media (max-width: 440px) {
+  .topbar { padding: 12px 12px; }
+  .logo .brandtext { display: none; }
+  .topbar nav { gap: 2px; }
+  .topbar nav a { padding: 6px 9px; font-size: 13px; }
+}
+
 ::selection { background: var(--brand); color: var(--bg-deep); }
 
 @media (prefers-reduced-motion: reduce) {
