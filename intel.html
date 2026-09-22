@@ -1,0 +1,62 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<meta name="theme-color" content="#121210">
+<title>Truthbox - Fraud Intelligence</title>
+<link rel="icon" href="icons/icon.svg" type="image/svg+xml">
+<link rel="stylesheet" href="css/style.css">
+<style>
+  .intel-wrap { max-width: 960px; margin: 0 auto; padding: 20px 16px; }
+  .netcard svg { width: 100%; height: auto; display: block; }
+  .risk { font-family: var(--mono); font-size: 12px; }
+  .idhash { font-family: var(--mono); font-size: 12px; color: var(--text-dim); }
+  .legendrow { display: flex; gap: 16px; flex-wrap: wrap; margin-top: 10px; font-size: 12px; color: var(--text-dim); }
+  .legendrow .k { display: inline-flex; align-items: center; gap: 6px; }
+  .legendrow .sw { width: 18px; height: 3px; border-radius: 2px; }
+</style>
+</head>
+<body>
+<header class="topbar">
+  <a class="logo" href="index.html"><span class="mark">T</span>TRUTHBOX</a>
+  <nav>
+    <a href="capture.html">Capture</a>
+    <a href="verify.html">Verify</a>
+    <a href="dashboard.html">Seller</a>
+    <a href="intel.html" class="active">Intel</a>
+  </nav>
+</header>
+
+<div class="intel-wrap">
+  <h2 style="margin-bottom:4px">Cross-brand fraud intelligence</h2>
+  <p class="muted" style="font-size:13.5px">Opt-in shared blacklist across participating D2C brands. Demo dataset, clustered live in this tab. Identifiers are salted hashes; no raw address or UPI ID ever leaves a brand.</p>
+
+  <div class="spacer" style="height:16px"></div>
+  <section class="grid cols-4" id="intelStats"></section>
+
+  <h3 class="section-title">Claim network: brands and repeat claimants</h3>
+  <div class="card netcard">
+    <div id="network"></div>
+    <div class="legendrow">
+      <span class="k"><span class="sw" style="background:var(--brand)"></span>verified claim</span>
+      <span class="k"><span class="sw" style="background:var(--danger)"></span>flagged or rejected claim</span>
+      <span class="k">node size = claim count</span>
+    </div>
+  </div>
+
+  <h3 class="section-title">Repeat offender clusters</h3>
+  <div class="card">
+    <table class="data" id="offenderTable">
+      <thead><tr><th>Claimant hash</th><th>Brands hit</th><th>Claims</th><th>Flagged</th><th>Risk</th></tr></thead>
+      <tbody></tbody>
+    </table>
+    <p class="sub" style="margin-top:12px">Risk model: share of flagged claims, weighted up when the same identifier appears across multiple brands. No single brand can see this pattern in its own data; four of the claimants below look clean to every individual brand they hit. Production aggregation runs under differential privacy so membership in the blacklist is provable only above a claim threshold.</p>
+  </div>
+
+  <div class="spacer"></div>
+</div>
+
+<script type="module" src="js/intel.js"></script>
+</body>
+</html>
