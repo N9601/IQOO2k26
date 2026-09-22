@@ -44,6 +44,7 @@ The manifest is JSON with these top-level fields:
 | `vision` | detection engine and best detection `{label, score}` |
 | `ocr` | OCR engine, serial candidates, matched serial, confidence |
 | `video` | SHA-256, byte size and MIME type of the recorded proof video, or null |
+| `snapshots` | JPEG stills captured at the seal, reveal and label steps as data URLs, each with its SHA-256; covered by the signature |
 | `chain` | algorithm string, genesis, head, Merkle root, full link list |
 | `verdict` | seal, SKU-match, serial-match booleans and overall `VERIFIED` / `FLAGGED` |
 | `signature` | `alg`, public key JWK, base64 ECDSA signature |

@@ -24,9 +24,29 @@ python -m http.server 8080
 
 Then open http://localhost:8080 on a phone or laptop.
 
-- `capture.html` - buyer-side guided unboxing capture
-- `verify.html` - drop a manifest, verify the signature and hash chain; edit one byte and watch it fail
-- `dashboard.html` - seller portal: orders, QR labels, verification analytics
+- `capture.html` - buyer-side guided unboxing capture (English and Hindi)
+- `verify.html` - drop a manifest or open a verification link; edit one byte and watch it fail
+- `dashboard.html` - seller portal: QR labels with SKU dimensions, returns funnel, manifest inbox
+- `intel.html` - cross-brand repeat-offender clustering over salted claimant hashes
+
+## Feature map
+
+| Feature | How it works |
+|---|---|
+| Guided five-step capture | Seal, open, reveal, label, sign. Minimum dwell per step, no skipping |
+| Frame hash chain | SHA-256(frame, wall clock, monotonic clock, prev) at 5 fps, live ticker |
+| On-device detection | COCO-SSD (TF.js), auto-advances when the ordered SKU class is seen |
+| Label OCR | Tesseract.js reads serials, cross-checked against the order pattern |
+| Dispatch QR scan | jsQR binds order, nonce, SKU class and serial pattern in one scan |
+| Dimensional check | The printed QR's known size calibrates px-per-mm; the detected item is measured against SKU dimensions |
+| Signed snapshots | JPEG stills at seal, reveal and label, hashed inside the signed manifest |
+| Proof video | MediaRecorder capture, SHA-256 in the manifest |
+| Signing | Non-extractable ECDSA P-256 via WebCrypto over canonical JSON |
+| Verification | Five independent checks, chain visualizer, tamper lab with five attacks |
+| Verification links | Manifest gzip-compressed into a URL fragment, verified on open, never sent to a server |
+| Dispute report | Print-ready evidence record with photos and cryptographic anchors |
+| Fraud intelligence | Claims clustered by salted claimant hash across brands, risk-weighted by spread |
+| PWA | Installable, offline after first load, own files network-first |
 
 ## Demo script (3 minutes)
 
