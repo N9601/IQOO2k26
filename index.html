@@ -22,6 +22,9 @@
   .hero h1 .accent { color: var(--brand); }
   .hero p { color: var(--text-dim); max-width: 560px; margin: 16px auto 0; font-size: 16px; }
   .hero .cta { margin-top: 30px; display: flex; gap: 12px; justify-content: center; flex-wrap: wrap; }
+  .reviewer-cue { margin-top: 18px; font-size: 13px; color: var(--faint); }
+  .reviewer-cue a { color: var(--text-dim); }
+  .reviewer-cue strong { color: var(--text-dim); }
   .pipeline {
     display: flex; align-items: center; justify-content: center; gap: 8px;
     flex-wrap: wrap; margin: 44px 0 10px; font-family: var(--mono); font-size: 12px;
@@ -77,6 +80,7 @@
       <a class="btn" href="verify.html">Verify a manifest</a>
       <button class="btn" id="installBtn" style="display:none">Install app</button>
     </div>
+    <p class="reviewer-cue">Reviewing without a camera? Open <a href="capture.html">Capture</a> and hit <strong>Run scripted demo</strong>, then break the result in the <a href="verify.html">Verify</a> tamper lab.</p>
   </section>
 
   <div class="pipeline">

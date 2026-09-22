@@ -4,6 +4,18 @@
 
 AR-verified unboxing to eliminate return fraud in Indian D2C commerce.
 
+**Live:** https://n9601.github.io/IQOO2k26/
+
+## Reviewers: see it work in 60 seconds (no camera, no install)
+
+1. Open the [Capture page](https://n9601.github.io/IQOO2k26/capture.html) and click **Run scripted demo**. It plays a full guided unboxing and produces a real ECDSA-signed manifest (the detection and serial are injected for the demo and the manifest says so). Click **Copy verification link** on the result.
+2. Open the [Verify page](https://n9601.github.io/IQOO2k26/verify.html) and click **Generate a signed demo manifest**: five green checks, including a recomputed Merkle root and a valid signature.
+3. In the **Tamper lab** below it, click **Change the serial that was read**, or **Silently remove 10 frames**. Verification flips to EVIDENCE REJECTED instantly, naming the exact check that failed. Click **Restore original** and it passes again.
+
+That third step is the whole idea: a Truthbox manifest is evidence a dispute team can act on because faking it is mathematically visible, while a self-recorded video is not. The [Threats page](https://n9601.github.io/IQOO2k26/threats.html) maps every fraud type to the mechanism that defeats it.
+
+---
+
 Return fraud costs Indian D2C brands an estimated Rs 3,500 Cr per year. Empty-box claims, item swaps, serial substitution and inflated damage claims are undetectable after the fact because no trustworthy evidence exists from the moment the parcel was opened. Truthbox turns the 30 seconds of unboxing into signed, verifiable, dispute-ready evidence, with every sensitive byte processed on the buyer's device.
 
 ## What it does
