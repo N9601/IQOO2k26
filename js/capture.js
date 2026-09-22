@@ -568,7 +568,7 @@ function showResult(m) {
   $("verdictTitle").textContent = m.verdict.overall;
   $("verdictTitle").style.color = ok ? "var(--brand)" : "var(--warn)";
   $("verdictSub").textContent = ok
-    ? "All checks passed. This manifest is dispute-ready evidence."
+    ? "All checks passed. Return window active for 7 days. This manifest is dispute-ready evidence."
     : "Capture completed and signed, but one or more checks did not pass. The manifest records exactly what was seen.";
 
   const rows = [

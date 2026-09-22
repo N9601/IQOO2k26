@@ -224,6 +224,12 @@ const ATTACKS = {
     if (m.capture) m.capture.startedAt = "2026-01-01T09:00:00.000Z";
     return "Capture backdated by months to fit inside a return window. The timestamp is inside the signed payload.";
   },
+  photo(m) {
+    const keys = Object.keys(m.snapshots || {});
+    if (!keys.length) return "This manifest carries no snapshots; capture one with the app to try this attack.";
+    m.snapshots[keys[0]].jpeg = "data:image/jpeg;base64,/9j/4AAQSkZJRg==";
+    return "The " + keys[0] + " photo replaced with a different image. The photos are inside the signed payload: signature fails.";
+  },
   restore() {
     return "Original manifest restored. All checks pass again.";
   },
