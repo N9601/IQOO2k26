@@ -3,7 +3,7 @@
  * Evidence is produced entirely offline; only manifest delivery needs a
  * network, and that can happen later. */
 
-const CACHE = "truthbox-v1";
+const CACHE = "truthbox-v2";
 const CORE = [
   "./",
   "./index.html",
@@ -35,15 +35,32 @@ self.addEventListener("activate", (e) => {
 
 self.addEventListener("fetch", (e) => {
   if (e.request.method !== "GET") return;
-  e.respondWith(
-    caches.match(e.request).then(
-      (hit) =>
-        hit ||
-        fetch(e.request).then((res) => {
+  const sameOrigin = new URL(e.request.url).origin === location.origin;
+  if (sameOrigin) {
+    // Network-first for our own files so deploys show up immediately;
+    // the cache still serves the whole app when offline.
+    e.respondWith(
+      fetch(e.request)
+        .then((res) => {
           const copy = res.clone();
           caches.open(CACHE).then((c) => c.put(e.request, copy)).catch(() => {});
           return res;
         })
-    )
-  );
+        .catch(() => caches.match(e.request))
+    );
+  } else {
+    // Cache-first for CDN runtimes and model weights: large, versioned,
+    // immutable, and the reason the app works offline after first load.
+    e.respondWith(
+      caches.match(e.request).then(
+        (hit) =>
+          hit ||
+          fetch(e.request).then((res) => {
+            const copy = res.clone();
+            caches.open(CACHE).then((c) => c.put(e.request, copy)).catch(() => {});
+            return res;
+          })
+      )
+    );
+  }
 });
