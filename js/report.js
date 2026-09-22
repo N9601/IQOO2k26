@@ -70,6 +70,16 @@ export function openReport(m, results) {
   <tr><td>Proof video SHA-256</td><td class="mono">${esc(m.video?.sha256 ?? "no video")}</td></tr>
 </table>
 
+${m.snapshots && Object.keys(m.snapshots).length ? `
+<h2>Signed photographic evidence</h2>
+<div style="display:flex; gap:12px; flex-wrap:wrap">
+  ${Object.entries(m.snapshots).map(([k, s]) => `
+  <figure style="margin:0">
+    <img src="${String(s.jpeg).startsWith("data:image/") ? s.jpeg : ""}" alt="${esc(k)}" style="width:200px; border: 1px solid #c9c4b4;">
+    <figcaption style="font-size:11px; color:#5a564a; margin-top:3px">${esc(k)} step &middot; SHA-256 ${esc(String(s.sha256).slice(0, 16))}...</figcaption>
+  </figure>`).join("")}
+</div>` : ""}
+
 <h2>Cryptographic anchors</h2>
 <table class="kv">
   <tr><td>Chain head</td><td class="mono">${esc(m.chain?.head)}</td></tr>

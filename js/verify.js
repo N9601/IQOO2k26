@@ -125,8 +125,14 @@ async function render() {
   renderViz(results);
 
   const m = current;
+  const snaps = m.snapshots && Object.keys(m.snapshots).length
+    ? `<div style="display:flex; gap:10px; flex-wrap:wrap; margin:12px 0">` +
+      Object.entries(m.snapshots).map(([k, s]) =>
+        `<figure style="margin:0"><img src="${String(s.jpeg).startsWith("data:image/") ? s.jpeg : ""}" alt="${k}" style="width:150px; border-radius:8px; border:1px solid var(--line)"><figcaption class="sub" style="margin-top:4px">${k} - signed still</figcaption></figure>`
+      ).join("") + `</div>`
+    : "";
   $("manifestMeta").innerHTML = `
-    <h3>Manifest</h3>
+    <h3>Manifest</h3>${snaps}
     <pre class="block">order      ${m.order?.id ?? "?"}
 nonce      ${m.order?.nonce ?? "?"}
 captured   ${m.capture?.startedAt ?? "?"}

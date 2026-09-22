@@ -314,6 +314,7 @@ function enterStep(i) {
 async function onAction() {
   const s = STEPS[state.step];
   if (s.id === "seal") {
+    snapshot("seal");
     logStep("seal", { confirmedBy: "buyer", frame: state.chain.length });
     enterStep(1);
   } else if (s.id === "open") {
@@ -321,16 +322,31 @@ async function onAction() {
     enterStep(2);
   } else if (s.id === "reveal") {
     // Manual fallback after detection timeout: recorded as such, not hidden.
+    snapshot("reveal");
     logStep("reveal", { confirmedBy: "buyer-manual", detection: state.detection.best, frame: state.chain.length });
     state.detection.done = true;
     enterStep(3);
   } else if (s.id === "label") {
+    snapshot("label");
     await doOcr();
   }
 }
 
 function logStep(id, evidence) {
   state.stepLog.push({ id, at: new Date().toISOString(), evidence });
+}
+
+/* Still-frame evidence: a small JPEG captured at the decisive moment of
+ * a step, embedded in the manifest and covered by the signature. */
+function snapshot(name) {
+  const video = $("cam");
+  if (video.readyState < 2 || !video.videoWidth) return;
+  const c = document.createElement("canvas");
+  const w = 480, h = Math.round((video.videoHeight / video.videoWidth) * w);
+  c.width = w; c.height = h;
+  c.getContext("2d").drawImage(video, 0, 0, w, h);
+  if (!state.snapshots) state.snapshots = {};
+  state.snapshots[name] = c.toDataURL("image/jpeg", 0.55);
 }
 
 /* ---------- detection ---------- */
@@ -390,6 +406,7 @@ async function runDetection() {
   state.detection.hits = match ? state.detection.hits + 1 : 0;
   if (state.detection.hits >= 2) {
     state.detection.done = true;
+    snapshot("reveal");
     logStep("reveal", { confirmedBy: "detector", detection: { label: top.label, score: +top.score.toFixed(3) }, frame: state.chain.length });
     enterStep(3);
   }
@@ -505,6 +522,11 @@ async function finalize() {
     verdict.sealConfirmed && verdict.skuMatch && verdict.serialMatch && dimensionCheck !== "fail"
       ? "VERIFIED" : "FLAGGED";
 
+  const snapshots = {};
+  for (const [name, jpeg] of Object.entries(state.snapshots || {})) {
+    snapshots[name] = { jpeg, sha256: hex(await sha256(new TextEncoder().encode(jpeg))) };
+  }
+
   const manifest = {
     truthbox: "1.0",
     order: state.order,
@@ -520,6 +542,7 @@ async function finalize() {
     vision: { engine: "coco-ssd lite_mobilenet_v2 (tfjs)", detection: state.detection.best, measured: state.measured },
     ocr: state.ocr ? { engine: "tesseract.js 5 (wasm)", serialCandidates: state.ocr.serialCandidates, matchedSerial: state.ocr.matchedSerial, confidence: state.ocr.confidence } : null,
     video: videoInfo,
+    snapshots,
     chain: {
       algo: "SHA-256(frame || wallMs || monoMs || prev)",
       genesis: "0".repeat(64),
