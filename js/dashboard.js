@@ -14,7 +14,7 @@ const WEEKS = [
   { w: "W34", v: 296 }, { w: "W35", v: 352 }, { w: "W36", v: 419 },
   { w: "W37", v: 468 }, { w: "W38", v: 530 },
 ];
-const SERIES = "#1aa863"; // validated against dark surface #161e29
+const SERIES = "#1aa863"; // validated against dark surface #1c1c19
 
 function renderChart() {
   const W = 900, H = 300, padL = 46, padR = 16, padT = 18, padB = 34;
@@ -27,16 +27,16 @@ function renderChart() {
 
   let g = "";
   for (const t of [0, 150, 300, 450, 600]) {
-    g += `<line x1="${padL}" y1="${y(t)}" x2="${W - padR}" y2="${y(t)}" stroke="#24303f" stroke-width="1"/>`;
-    g += `<text x="${padL - 8}" y="${y(t) + 4}" text-anchor="end" font-size="11" fill="#8b98a9">${t}</text>`;
+    g += `<line x1="${padL}" y1="${y(t)}" x2="${W - padR}" y2="${y(t)}" stroke="#2a2a25" stroke-width="1"/>`;
+    g += `<text x="${padL - 8}" y="${y(t) + 4}" text-anchor="end" font-size="11" fill="#a5a297">${t}</text>`;
   }
   let bars = "";
   WEEKS.forEach((d, i) => {
     const bx = x(i) - bw / 2, by = y(d.v), bh = padT + ih - by;
     bars += `<path data-i="${i}" d="M${bx},${by + 4} a4,4 0 0 1 4,-4 h${bw - 8} a4,4 0 0 1 4,4 v${bh - 4} h${-bw} z" fill="${SERIES}"/>`;
-    bars += `<text x="${x(i)}" y="${H - 12}" text-anchor="middle" font-size="11" fill="#8b98a9">${d.w}</text>`;
+    bars += `<text x="${x(i)}" y="${H - 12}" text-anchor="middle" font-size="11" fill="#a5a297">${d.w}</text>`;
     if (i === WEEKS.length - 1) {
-      bars += `<text x="${x(i)}" y="${by - 8}" text-anchor="middle" font-size="12" font-weight="700" fill="#e8eef5">${d.v}</text>`;
+      bars += `<text x="${x(i)}" y="${by - 8}" text-anchor="middle" font-size="12" font-weight="700" fill="#f2f1ec">${d.v}</text>`;
     }
   });
   $("chart").innerHTML =

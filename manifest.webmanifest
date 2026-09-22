@@ -4,8 +4,8 @@
   "description": "AR-verified unboxing with a cryptographic chain of custody. No customer video leaves the phone.",
   "start_url": "./index.html",
   "display": "standalone",
-  "background_color": "#0b0f14",
-  "theme_color": "#0b0f14",
+  "background_color": "#121210",
+  "theme_color": "#121210",
   "icons": [
     { "src": "icons/icon.svg", "sizes": "any", "type": "image/svg+xml", "purpose": "any" }
   ]
