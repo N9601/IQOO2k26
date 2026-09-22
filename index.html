@@ -24,6 +24,11 @@
   }
   .pipeline .arrow { color: var(--brand-dim); }
   .statband { margin: 40px 0; }
+  table.compare td.tb, table.compare th.tb { background: var(--brand-soft); }
+  table.compare .y { color: var(--brand); font-weight: 600; }
+  table.compare .n { color: var(--danger); }
+  table.compare .m { color: var(--warn); }
+  table.compare td:first-child { color: var(--text-dim); }
   footer { text-align: center; color: var(--text-dim); font-size: 12.5px; padding: 40px 0; }
   .chainlive { margin: 18px auto 0; max-width: 720px; padding: 14px 16px; }
   .chainlive-head {
@@ -84,6 +89,21 @@
     <div class="card stat"><div class="num green">30 sec</div><div class="label">verified capture, fully on-device</div></div>
     <div class="card stat"><div class="num green">0</div><div class="label">customer frames leaving the phone</div></div>
   </section>
+
+  <h2 class="section-title">Why existing mitigations fail</h2>
+  <div class="card" style="overflow-x:auto">
+    <table class="data compare">
+      <thead><tr><th></th><th class="tb">Truthbox</th><th>Self-recorded video</th><th>Unboxing agent</th><th>Marketplace escrow</th></tr></thead>
+      <tbody>
+        <tr><td>Verifiable to dispute standard</td><td class="tb"><span class="y">yes</span></td><td><span class="n">no, trivially edited</span></td><td><span class="m">partial</span></td><td><span class="n">no</span></td></tr>
+        <tr><td>Customer video stays on phone</td><td class="tb"><span class="y">yes</span></td><td><span class="n">no</span></td><td><span class="n">no</span></td><td>n/a</td></tr>
+        <tr><td>Detects item swap at unboxing</td><td class="tb"><span class="y">yes</span></td><td><span class="n">no</span></td><td><span class="n">no</span></td><td><span class="n">no</span></td></tr>
+        <tr><td>Detects empty box</td><td class="tb"><span class="y">yes</span></td><td><span class="m">weak</span></td><td><span class="y">yes</span></td><td><span class="n">no</span></td></tr>
+        <tr><td>Cost per delivery</td><td class="tb"><span class="y">Rs 5</span></td><td>Rs 0</td><td>Rs 40-90</td><td>working-capital delay</td></tr>
+        <tr><td>Cross-brand offender data</td><td class="tb"><span class="y">yes, opt-in</span></td><td><span class="n">no</span></td><td><span class="n">no</span></td><td><span class="m">partial</span></td></tr>
+      </tbody>
+    </table>
+  </div>
 
   <h2 class="section-title">How the proof works</h2>
   <section class="grid cols-3">
