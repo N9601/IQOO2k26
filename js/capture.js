@@ -372,7 +372,10 @@ function calibrate(video) {
   if (sidePx < 8) return;
   state.calib.pxPerMm = sidePx / state.order.qrMm;
   state.calib.samples++;
-  if (qr.data.includes(state.order.nonce)) state.calib.qrMatched = true;
+  if (qr.data.includes(state.order.nonce) && !state.calib.qrMatched) {
+    state.calib.qrMatched = true;
+    document.querySelector(".chainticker .rec").innerHTML = '<span class="dot"></span>QR BOUND';
+  }
 }
 
 async function runDetection() {

@@ -125,6 +125,18 @@ async function render() {
   renderViz(results);
 
   const m = current;
+  // Capture verdicts: what the device observed, distinct from the
+  // integrity checks above (these are content, authenticated by the signature).
+  const v = m.verdict || {};
+  const capRows = [
+    ["Seal confirmed", v.sealConfirmed === true],
+    ["SKU match", v.skuMatch === true],
+    ["Serial match", v.serialMatch === true],
+  ];
+  if (v.dimensionCheck && v.dimensionCheck !== "unknown") capRows.push(["Dimensions", v.dimensionCheck === "pass"]);
+  if ("qrSeenDuringCapture" in v) capRows.push(["Dispatch QR seen on camera", v.qrSeenDuringCapture === true]);
+  const capBadges = capRows.map(([n, ok2]) =>
+    `<span class="badge ${ok2 ? "ok" : "warn"}"><span class="dot"></span>${n}</span>`).join(" ");
   const snaps = m.snapshots && Object.keys(m.snapshots).length
     ? `<div style="display:flex; gap:10px; flex-wrap:wrap; margin:12px 0">` +
       Object.entries(m.snapshots).map(([k, s]) =>
@@ -132,7 +144,8 @@ async function render() {
       ).join("") + `</div>`
     : "";
   $("manifestMeta").innerHTML = `
-    <h3>Manifest</h3>${snaps}
+    <h3>Manifest</h3>
+    <div style="display:flex; gap:6px; flex-wrap:wrap; margin:10px 0">${capBadges}</div>${snaps}
     <pre class="block">order      ${m.order?.id ?? "?"}
 nonce      ${m.order?.nonce ?? "?"}
 captured   ${m.capture?.startedAt ?? "?"}
