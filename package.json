@@ -1,0 +1,11 @@
+{
+  "name": "truthbox",
+  "version": "1.0.0",
+  "description": "AR-verified unboxing with a cryptographic chain of custody",
+  "type": "module",
+  "scripts": {
+    "test": "node --test \"tests/**/*.test.mjs\"",
+    "serve": "python -m http.server 8080"
+  },
+  "license": "MIT"
+}
