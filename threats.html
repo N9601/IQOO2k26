@@ -1,0 +1,124 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<meta name="theme-color" content="#121210">
+<title>Truthbox - Threat Coverage</title>
+<link rel="icon" href="icons/icon.svg" type="image/svg+xml">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="css/style.css">
+<style>
+  .threats-wrap { max-width: 880px; margin: 0 auto; padding: 20px 16px; }
+  .threat {
+    border: 1px solid var(--line); border-radius: 12px; padding: 18px 20px;
+    background: var(--bg-card); margin-bottom: 14px;
+  }
+  .threat h3 { font-size: 16px; margin-bottom: 2px; }
+  .threat .fraud { color: var(--danger); font-size: 12px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.08em; }
+  .threat .mech { margin-top: 10px; display: flex; gap: 10px; align-items: flex-start; }
+  .threat .mech .arrow { color: var(--brand); font-weight: 700; font-family: var(--mono); flex: 0 0 auto; }
+  .threat .mech .body { font-size: 14px; color: var(--text); }
+  .threat .mech .body .how { color: var(--text-dim); font-size: 13px; margin-top: 3px; }
+  .residual { margin-top: 10px; font-size: 12.5px; color: var(--faint); font-style: italic; }
+</style>
+</head>
+<body>
+<header class="topbar">
+  <a class="logo" href="index.html"><span class="mark">T</span><span class="brandtext">TRUTHBOX</span></a>
+  <nav>
+    <a href="capture.html">Capture</a>
+    <a href="verify.html">Verify</a>
+    <a href="dashboard.html">Seller</a>
+    <a href="intel.html">Intel</a>
+    <a href="threats.html">Threats</a>
+  </nav>
+</header>
+
+<div class="threats-wrap">
+  <h2 style="margin-bottom:6px">Threat coverage</h2>
+  <p class="muted" style="font-size:14px; margin-bottom:20px">Each fraud pattern that drains Indian D2C, and the specific Truthbox mechanism that defeats it. Nothing here is aspirational: every mechanism is implemented in this app and provable on the Verify page.</p>
+
+  <div id="threatList"></div>
+
+  <div class="card" style="margin-top:8px">
+    <h3>What Truthbox does not claim</h3>
+    <p class="sub">Truthbox does not claim to detect every possible fraud. A determined buyer can film a genuinely staged scene. What it removes is the evidence vacuum that makes cheap fraud free: it raises the cost of a fraudulent claim from "re-encode a WhatsApp video" to "defeat live on-device vision during a continuous, hardware-attested capture bound to the order before the box was opened." That shift is what moves 3-7% of GMV back onto the right side of the ledger.</p>
+  </div>
+  <div class="spacer"></div>
+</div>
+
+<script type="module">
+const THREATS = [
+  {
+    fraud: "Empty box / brick swap",
+    title: "Buyer claims the parcel arrived empty or full of rocks",
+    arrow: "seal + reveal",
+    body: "The guided capture forces a sealed-parcel shot, then a continuous open-and-reveal with no cut. The item is detected on-device and its bounding box measured. An empty box has no item to detect and no dimensions to match.",
+    residual: "Residual: a buyer could show a decoy item. Detection class and dimensions must both match the SKU, which a random object will not.",
+  },
+  {
+    fraud: "Wrong-item swap",
+    title: "Buyer returns a used or counterfeit unit in place of the real one",
+    arrow: "SKU match + serial OCR",
+    body: "On-device detection confirms the item class and OCR reads the serial, cross-checked against the order's expected pattern. A swapped unit fails the class match, the serial match, or both.",
+    residual: "Residual: same-model swap. The serial read at unboxing is bound into the signed manifest, so the returned unit's serial can be compared against it.",
+  },
+  {
+    fraud: "Serial / IMEI substitution",
+    title: "Buyer keeps the genuine device, returns a lookalike",
+    arrow: "OCR + signed manifest",
+    body: "The serial is read on-device and sealed into the signed manifest at unboxing. On return, the seller compares the physical serial against the one the buyer's own capture recorded. A substitution no longer matches.",
+    residual: "The serial is inside the signed payload, so the buyer cannot later claim a different serial was delivered.",
+  },
+  {
+    fraud: "Damage-in-transit inflation",
+    title: "Cosmetic damage exaggerated into functional damage for a full refund",
+    arrow: "timestamped photo evidence",
+    body: "Signed still frames are captured at reveal, showing the item's actual condition the moment the box was opened, hashed into the manifest. Later-claimed damage that is absent from the sealed evidence is contradicted by it.",
+    residual: "Residual: genuine transit damage still occurs. Truthbox establishes the condition at unboxing, which is exactly the disputed fact.",
+  },
+  {
+    fraud: "Edited or re-recorded video",
+    title: "Self-recorded unboxing edited to fake the contents",
+    arrow: "hash chain + ECDSA signature",
+    body: "Every frame is chained (each hash depends on the previous) and the whole record is signed with a non-extractable key. Any insertion, removal or edit breaks the chain or the signature. The Verify page lets anyone prove this in one click.",
+    residual: "This is the core guarantee. Editing is not made hard, it is made mathematically visible.",
+  },
+  {
+    fraud: "Replay of an old capture",
+    title: "Buyer reuses a genuine past unboxing against a new order",
+    arrow: "one-time dispatch nonce",
+    body: "The dispatch QR carries a per-order nonce that is bound into the manifest. A replayed capture carries the wrong nonce for the new order and is rejected at ingest.",
+    residual: "The seller records the nonce it issued at dispatch, closing the loop.",
+  },
+  {
+    fraud: "Backdating to fit a return window",
+    title: "Buyer alters the capture time to appear inside the window",
+    arrow: "signed timestamps + monotonic clock",
+    body: "Wall-clock and monotonic timestamps are inside the signed payload and every frame's monotonic delta is recorded. Backdating changes signed bytes, so the signature fails; a rolled-back clock breaks the monotonic ordering.",
+    residual: "Production adds an RFC 3161 trusted timestamp at manifest close.",
+  },
+  {
+    fraud: "Repeat-offender rings",
+    title: "Same address or UPI across dozens of brands, invisible to any one",
+    arrow: "cross-brand intelligence",
+    body: "Claims are clustered by salted claimant hash across participating brands and risk-scored by cross-brand spread. A ring member who looks clean to each brand individually lights up the moment the signals are pooled. See the Intel page.",
+    residual: "Opt-in and privacy-preserving: raw identifiers never leave a brand; production aggregates under differential privacy.",
+  },
+];
+
+document.getElementById("threatList").innerHTML = THREATS.map((t) => `
+  <div class="threat">
+    <div class="fraud">${t.fraud}</div>
+    <h3>${t.title}</h3>
+    <div class="mech">
+      <span class="arrow">${t.arrow} -&gt;</span>
+      <div class="body">${t.body}<div class="how"></div></div>
+    </div>
+    <div class="residual">${t.residual}</div>
+  </div>`).join("");
+</script>
+</body>
+</html>

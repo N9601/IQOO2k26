@@ -3,7 +3,7 @@
  * Evidence is produced entirely offline; only manifest delivery needs a
  * network, and that can happen later. */
 
-const CACHE = "truthbox-v4";
+const CACHE = "truthbox-v5";
 const CORE = [
   "./",
   "./index.html",
@@ -18,6 +18,7 @@ const CORE = [
   "./js/verify.js",
   "./js/dashboard.js",
   "./intel.html",
+  "./threats.html",
   "./js/intel.js",
   "./js/report.js",
   "./js/share.js",
