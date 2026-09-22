@@ -111,9 +111,12 @@ async function render() {
   const bv = $("bigverdict");
   bv.className = "bigverdict " + (ok ? "ok" : "fail");
   $("verdictGlyph").innerHTML = ok ? "&#10003;" : "&#10007;";
-  $("verdictText").textContent = ok ? "EVIDENCE VERIFIED" : "EVIDENCE REJECTED";
+  const demoTag = current.capture?.scripted ? " (scripted demo capture)" : current.capture?.simulated ? " (simulated feed)" : "";
+  $("verdictText").textContent = (ok ? "EVIDENCE VERIFIED" : "EVIDENCE REJECTED") + demoTag;
   $("verdictDetail").textContent = ok
-    ? "The chain of custody is unbroken and the signature is valid. This capture happened exactly as recorded."
+    ? (demoTag
+        ? "The signature is valid and the chain is unbroken, but this capture was " + (current.capture?.scripted ? "scripted for demonstration" : "run on a simulated feed") + ", so the detection and serial were not read from a real parcel."
+        : "The chain of custody is unbroken and the signature is valid. This capture happened exactly as recorded.")
     : "This manifest does not prove what it claims. At least one integrity check failed.";
 
   $("checkList").innerHTML = results.map((r) => `

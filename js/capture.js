@@ -130,6 +130,29 @@ $("actionBtn").addEventListener("click", onAction);
 $("abortBtn").addEventListener("click", () => location.reload());
 $("restartBtn").addEventListener("click", () => location.reload());
 $("scanQrBtn").addEventListener("click", scanDispatchQr);
+$("demoBtn").addEventListener("click", () => { state.scripted = true; startCapture(); });
+
+/* Scripted demo: a guaranteed-clean run for a live stage where the camera
+ * may be unreliable. Everything is real (hashing, Merkle root, signing);
+ * only the detection and serial are injected, and the manifest records
+ * that plainly (source "scripted-demo", scripted: true) so the evidence
+ * never overstates what was actually seen. */
+async function runScriptedTo(stepId, delay) {
+  await new Promise((r) => setTimeout(r, delay));
+  if (!state.scripted) return;
+  const btn = $("actionBtn");
+  if (STEPS[state.step].id !== stepId) return;
+  if (stepId === "reveal") {
+    state.detection.best = { label: state.order.expectedClass, score: 0.91, source: "scripted-demo" };
+    state.detection.done = true;
+    snapshot("reveal");
+    logStep("reveal", { confirmedBy: "scripted-demo", detection: state.detection.best, frame: state.chain.length });
+    enterStep(3);
+  } else {
+    btn.disabled = false;
+    btn.click();
+  }
+}
 
 /* Scan the Truthbox QR printed on the parcel: decodes the capture URL
  * and binds order id, SKU class, serial pattern and nonce in one shot. */
@@ -193,6 +216,10 @@ async function startCapture() {
   };
 
   const video = $("cam");
+  if (state.scripted) {
+    // Scripted demo never touches the camera: it drives the synthetic feed.
+    startSimulation(video);
+  } else {
   try {
     state.stream = await navigator.mediaDevices.getUserMedia({
       video: { facingMode: "environment", width: { ideal: 1280 } },
@@ -201,6 +228,7 @@ async function startCapture() {
     video.srcObject = state.stream;
   } catch (e) {
     startSimulation(video);
+  }
   }
   await video.play().catch(() => {});
 
@@ -221,6 +249,17 @@ async function startCapture() {
   if (state.simulated) $("simNote").style.display = "block";
   buildStepsRail();
   enterStep(0);
+
+  if (state.scripted) {
+    $("simNote").style.display = "block";
+    $("simNote").querySelector("h3").textContent = "Scripted demo";
+    $("simNote").querySelector("p").textContent =
+      "Auto-running a clean verified capture for demonstration. The hash chain, Merkle root and signature are real; the detection and serial are injected and the manifest records them as scripted-demo, so the evidence never claims more than was seen.";
+    runScriptedTo("seal", 2600);
+    runScriptedTo("open", 5600);
+    runScriptedTo("reveal", 8600);
+    runScriptedTo("label", 11600);
+  }
 
   // Frame hashing: 5 fps into the chain of custody.
   const off = document.createElement("canvas");
@@ -464,7 +503,12 @@ async function doOcr() {
   crop.getContext("2d").drawImage(video, vw * 0.15, vh * 0.38, cw, ch, 0, 0, cw, ch);
 
   let result = { raw: "", serialCandidates: [], imei: null, confidence: 0 };
-  if (modelsReady === true) {
+  if (state.scripted) {
+    // Injected serial that satisfies the order pattern, plainly labeled.
+    const demoSerial = "SNX" + Math.floor(1000000 + Math.random() * 8999999);
+    result = { raw: demoSerial, serialCandidates: [demoSerial], imei: null, confidence: 95, source: "scripted-demo" };
+    state.measured = state.measured || { wMm: state.order.dims?.wMm ?? 150, hMm: state.order.dims?.hMm ?? 72, method: "scripted-demo" };
+  } else if (modelsReady === true) {
     try { result = await readLabel(crop); } catch (e) { /* keep empty result */ }
   }
   const re = new RegExp(state.order.serialPattern);
@@ -543,6 +587,7 @@ async function finalize() {
       frameCount: links.length,
       hashRateFps: 5,
       simulated: state.simulated,
+      scripted: !!state.scripted,
     },
     steps: state.stepLog,
     vision: { engine: "coco-ssd lite_mobilenet_v2 (tfjs)", detection: state.detection.best, measured: state.measured },
