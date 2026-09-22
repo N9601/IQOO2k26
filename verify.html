@@ -1,0 +1,83 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<meta name="theme-color" content="#0b0f14">
+<title>Truthbox - Verify</title>
+<link rel="stylesheet" href="css/style.css">
+<style>
+  .verify-wrap { max-width: 760px; margin: 0 auto; padding: 20px 16px; }
+  .drop {
+    border: 2px dashed var(--line); border-radius: 16px; padding: 36px 20px;
+    text-align: center; color: var(--text-dim); cursor: pointer; transition: border-color 0.15s;
+  }
+  .drop:hover, .drop.over { border-color: var(--brand); color: var(--text); }
+  #results, #tamperlab { display: none; margin-top: 18px; }
+  .bigverdict {
+    display: flex; align-items: center; gap: 14px; padding: 18px;
+    border-radius: 16px; margin-bottom: 14px; border: 1px solid;
+  }
+  .bigverdict.ok { background: rgba(39, 209, 127, 0.09); border-color: var(--brand-dim); }
+  .bigverdict.fail { background: rgba(255, 93, 93, 0.09); border-color: var(--danger); }
+  .bigverdict .glyph { font-size: 30px; }
+  .bigverdict.ok .glyph { color: var(--brand); }
+  .bigverdict.fail .glyph { color: var(--danger); }
+  .bigverdict h2 { font-size: 20px; }
+  .bigverdict p { color: var(--text-dim); font-size: 13px; }
+  .tamperbtns { display: flex; flex-wrap: wrap; gap: 8px; margin: 12px 0; }
+  #manifestMeta { margin-top: 14px; }
+</style>
+</head>
+<body>
+<header class="topbar">
+  <a class="logo" href="index.html"><span class="mark">T</span>TRUTHBOX</a>
+  <nav>
+    <a href="capture.html">Capture</a>
+    <a href="verify.html" class="active">Verify</a>
+    <a href="dashboard.html">Seller</a>
+  </nav>
+</header>
+
+<div class="verify-wrap">
+  <h2 style="margin-bottom:6px">Independent manifest verification</h2>
+  <p class="muted" style="font-size:14px; margin-bottom:16px">Runs entirely in this browser tab. No server, no Truthbox account, no trust in us required. Anyone a manifest is forwarded to can run these exact checks.</p>
+
+  <div class="drop" id="drop">
+    <strong>Drop a Truthbox manifest here</strong><br>
+    <span style="font-size:13px">or click to choose a .json file</span>
+    <input type="file" id="fileInput" accept="application/json" style="display:none">
+  </div>
+  <div style="margin-top:10px; display:flex; gap:8px">
+    <button class="btn small" id="demoBtn">Generate a signed demo manifest</button>
+  </div>
+
+  <section id="results">
+    <div class="bigverdict" id="bigverdict">
+      <span class="glyph" id="verdictGlyph"></span>
+      <div><h2 id="verdictText"></h2><p id="verdictDetail"></p></div>
+    </div>
+    <div class="grid" id="checkList"></div>
+    <div class="card" id="manifestMeta"></div>
+  </section>
+
+  <section id="tamperlab">
+    <h3 class="section-title" style="margin-top:24px">Tamper lab</h3>
+    <div class="card">
+      <p class="sub">This is the point of Truthbox. Try to fake the evidence and re-verify. Every mutation below is what a fraudulent buyer or a careless middleman would attempt.</p>
+      <div class="tamperbtns">
+        <button class="btn small" data-attack="serial">Change the serial that was read</button>
+        <button class="btn small" data-attack="verdict">Flip verdict to VERIFIED</button>
+        <button class="btn small" data-attack="frame">Edit one frame hash</button>
+        <button class="btn small" data-attack="drop">Silently remove 10 frames</button>
+        <button class="btn small" data-attack="time">Backdate the capture</button>
+        <button class="btn small primary" data-attack="restore">Restore original</button>
+      </div>
+      <p class="sub" id="attackNote"></p>
+    </div>
+  </section>
+</div>
+
+<script type="module" src="js/verify.js"></script>
+</body>
+</html>
