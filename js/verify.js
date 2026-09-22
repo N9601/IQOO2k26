@@ -149,6 +149,17 @@ $("reportBtn").addEventListener("click", () => {
   if (!openReport(current, lastResults)) alert("Popup blocked. Allow popups to export the report.");
 });
 
+$("ondcBtn").addEventListener("click", async () => {
+  if (!current) return;
+  const { manifestToOndcIssue } = await import("./ondc.js");
+  const payload = manifestToOndcIssue(current, location.href.split("#")[0]);
+  const a = document.createElement("a");
+  a.href = URL.createObjectURL(new Blob([JSON.stringify(payload, null, 2)], { type: "application/json" }));
+  a.download = `ondc-issue-${current.order?.id || "manifest"}.json`;
+  a.click();
+  setTimeout(() => URL.revokeObjectURL(a.href), 5000);
+});
+
 /* ---------- chain visualization ---------- */
 
 function renderViz(results) {
