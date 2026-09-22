@@ -309,7 +309,8 @@ async function finalize() {
 
   if (state.recorder && state.recorder.state !== "inactive") {
     await new Promise((res) => { state.recorder.onstop = res; state.recorder.stop(); });
-    state.videoBlob = new Blob(state.recordedChunks, { type: state.recordedChunks[0]?.type || "video/webm" });
+    const blob = new Blob(state.recordedChunks, { type: state.recordedChunks[0]?.type || "video/webm" });
+    if (blob.size > 0) state.videoBlob = blob;
   }
 
   const links = state.chain.links;
