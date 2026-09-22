@@ -114,13 +114,19 @@ function renderRows() {
 renderRows();
 
 const dz = $("inboxDrop");
+dz.addEventListener("click", () => $("inboxFile").click());
+$("inboxFile").addEventListener("change", (e) => {
+  if (e.target.files[0]) ingest(e.target.files[0]);
+});
 dz.addEventListener("dragover", (e) => { e.preventDefault(); dz.classList.add("over"); });
 dz.addEventListener("dragleave", () => dz.classList.remove("over"));
 dz.addEventListener("drop", async (e) => {
   e.preventDefault();
   dz.classList.remove("over");
-  const f = e.dataTransfer.files[0];
-  if (!f) return;
+  if (e.dataTransfer.files[0]) ingest(e.dataTransfer.files[0]);
+});
+
+async function ingest(f) {
   let m;
   try { m = JSON.parse(await f.text()); } catch { dz.textContent = "Not valid JSON."; return; }
   const { ok } = await verifyManifest(m);
@@ -141,4 +147,4 @@ dz.addEventListener("drop", async (e) => {
   dz.textContent = ok
     ? "Manifest verified and ingested: " + row.order
     : "Manifest REJECTED (integrity failure) and logged: " + row.order;
-});
+}
