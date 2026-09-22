@@ -1,0 +1,153 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<meta name="theme-color" content="#0b0f14">
+<title>Truthbox - Verified Capture</title>
+<link rel="stylesheet" href="css/style.css">
+<style>
+  .stage-wrap { max-width: 640px; margin: 0 auto; padding: 16px; }
+  .videobox {
+    position: relative; border-radius: 18px; overflow: hidden;
+    border: 1px solid var(--line); background: #000; aspect-ratio: 4 / 5;
+  }
+  @media (min-width: 700px) { .videobox { aspect-ratio: 16 / 10; } }
+  .videobox video, .videobox canvas.overlay {
+    position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover;
+  }
+  canvas.overlay { pointer-events: none; }
+  .stepbanner {
+    position: absolute; top: 12px; left: 12px; right: 12px; z-index: 5;
+    background: rgba(11, 15, 20, 0.82); backdrop-filter: blur(6px);
+    border: 1px solid var(--line); border-radius: 12px; padding: 10px 14px;
+  }
+  .stepbanner .stepname { font-weight: 700; font-size: 14px; }
+  .stepbanner .stephint { color: var(--text-dim); font-size: 12.5px; }
+  .chainticker {
+    position: absolute; bottom: 12px; left: 12px; right: 12px; z-index: 5;
+    display: flex; justify-content: space-between; align-items: center; gap: 10px;
+    background: rgba(11, 15, 20, 0.82); backdrop-filter: blur(6px);
+    border: 1px solid var(--line); border-radius: 12px; padding: 8px 12px;
+    font-family: var(--mono); font-size: 11px; color: var(--text-dim);
+  }
+  .chainticker .head { color: var(--brand); overflow: hidden; white-space: nowrap; text-overflow: ellipsis; max-width: 55%; }
+  .rec { display: inline-flex; align-items: center; gap: 6px; color: var(--danger); font-weight: 700; }
+  .rec .dot { animation: blink 1.2s infinite; }
+  @keyframes blink { 50% { opacity: 0.2; } }
+  .steps { display: flex; gap: 6px; margin: 14px 0; }
+  .steps .s {
+    flex: 1; text-align: center; font-size: 11px; padding: 8px 2px;
+    border-radius: 9px; border: 1px solid var(--line); color: var(--text-dim);
+    background: var(--bg-raise);
+  }
+  .steps .s.active { border-color: var(--brand); color: var(--brand); font-weight: 700; }
+  .steps .s.done { color: var(--text); background: var(--bg-card); }
+  .steps .s.done::before { content: "\2713 "; color: var(--brand); }
+  .actionrow { display: flex; gap: 10px; margin-top: 6px; }
+  .actionrow .btn { flex: 1; }
+  .ocrtarget {
+    position: absolute; z-index: 4; left: 15%; right: 15%; top: 38%; height: 24%;
+    border: 2px dashed var(--brand); border-radius: 12px; display: none;
+  }
+  #simNote { display: none; margin: 10px 0 0; }
+  #result { display: none; }
+  .verdictbig { font-size: 24px; font-weight: 800; margin-bottom: 4px; }
+</style>
+</head>
+<body>
+<header class="topbar">
+  <a class="logo" href="index.html"><span class="mark">T</span>TRUTHBOX</a>
+  <nav>
+    <a href="capture.html" class="active">Capture</a>
+    <a href="verify.html">Verify</a>
+    <a href="dashboard.html">Seller</a>
+  </nav>
+</header>
+
+<div class="stage-wrap">
+
+  <!-- Order setup -->
+  <section id="setup" class="card">
+    <h3>Verified unboxing</h3>
+    <p class="sub">Confirm the order this capture is bound to. In production this arrives via the Truthbox QR printed on the parcel and cannot be edited.</p>
+    <div class="spacer" style="height:14px"></div>
+    <label class="field" for="orderId">Order ID</label>
+    <input type="text" id="orderId" value="">
+    <div class="spacer" style="height:12px"></div>
+    <label class="field" for="skuClass">Expected item (SKU visual class)</label>
+    <select id="skuClass">
+      <option value="cell phone">Smartphone / phone case</option>
+      <option value="bottle">Bottle (cosmetics, supplements)</option>
+      <option value="cup">Cup / mug</option>
+      <option value="book">Book</option>
+      <option value="mouse">Mouse (electronics accessory)</option>
+      <option value="remote">Remote / TWS case</option>
+      <option value="keyboard">Keyboard</option>
+      <option value="scissors">Scissors / tools</option>
+    </select>
+    <div class="spacer" style="height:12px"></div>
+    <label class="field" for="serialPattern">Expected serial pattern (regex)</label>
+    <input type="text" id="serialPattern" value="[A-Z0-9]{6,}">
+    <div class="spacer" style="height:16px"></div>
+    <button class="btn primary" id="startBtn" style="width:100%">Begin capture</button>
+    <p class="sub" id="modelStatus" style="margin-top:10px">Loading on-device models...</p>
+  </section>
+
+  <!-- Live capture -->
+  <section id="live" style="display:none">
+    <div class="videobox">
+      <video id="cam" autoplay playsinline muted></video>
+      <canvas id="overlay" class="overlay"></canvas>
+      <div class="stepbanner">
+        <div class="stepname" id="stepName">Position the sealed parcel</div>
+        <div class="stephint" id="stepHint">Show all sides of the tamper seal to the camera.</div>
+      </div>
+      <div class="ocrtarget" id="ocrTarget"></div>
+      <div class="chainticker">
+        <span class="rec"><span class="dot"></span>SEALING</span>
+        <span id="frameCount">0 frames</span>
+        <span class="head" id="chainHead">0000...</span>
+      </div>
+    </div>
+    <div class="steps" id="stepsRail"></div>
+    <div class="actionrow">
+      <button class="btn danger small" id="abortBtn">Abort</button>
+      <button class="btn primary" id="actionBtn">Seal is intact</button>
+    </div>
+    <p class="sub" id="liveStatus" style="margin-top:10px"></p>
+    <div class="card" id="simNote">
+      <h3>Simulation mode</h3>
+      <p class="sub">No camera is available, so a synthetic unboxing feed is being generated locally. Every other part of the pipeline (hash chain, detection, OCR, signing) runs exactly as it would on a real camera.</p>
+    </div>
+  </section>
+
+  <!-- Result -->
+  <section id="result">
+    <div class="card">
+      <div class="verdictbig" id="verdictTitle"></div>
+      <p class="sub" id="verdictSub"></p>
+      <div class="spacer" style="height:14px"></div>
+      <div class="grid" id="verdictRows"></div>
+      <div class="spacer" style="height:14px"></div>
+      <h3>Chain of custody</h3>
+      <pre class="block" id="chainSummary"></pre>
+      <div class="actionrow">
+        <button class="btn primary" id="downloadManifest">Download signed manifest</button>
+        <button class="btn" id="downloadVideo">Proof video</button>
+      </div>
+      <div class="actionrow" style="margin-top:10px">
+        <a class="btn" href="verify.html" style="flex:1">Open verifier</a>
+        <button class="btn small" id="restartBtn">New capture</button>
+      </div>
+    </div>
+  </section>
+
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/@tensorflow/tfjs@4.20.0/dist/tf.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/@tensorflow-models/coco-ssd@2.2.3/dist/coco-ssd.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/tesseract.js@5.1.1/dist/tesseract.min.js"></script>
+<script type="module" src="js/capture.js"></script>
+</body>
+</html>
