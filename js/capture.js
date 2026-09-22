@@ -284,6 +284,7 @@ function buildStepsRail() {
 
 function enterStep(i) {
   state.step = i;
+  if (navigator.vibrate) navigator.vibrate(i === STEPS.length - 1 ? [40, 60, 40] : 30);
   const s = STEPS[i];
   $("stepName").textContent = t(s.id + "Banner");
   $("stepHint").textContent = t(s.id + "Hint");
