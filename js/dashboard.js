@@ -150,20 +150,33 @@ renderRows();
 
 const dz = $("inboxDrop");
 dz.addEventListener("click", () => $("inboxFile").click());
-$("inboxFile").addEventListener("change", (e) => {
-  if (e.target.files[0]) ingest(e.target.files[0]);
-});
+$("inboxFile").addEventListener("change", (e) => ingestMany(e.target.files));
 dz.addEventListener("dragover", (e) => { e.preventDefault(); dz.classList.add("over"); });
 dz.addEventListener("dragleave", () => dz.classList.remove("over"));
 dz.addEventListener("drop", async (e) => {
   e.preventDefault();
   dz.classList.remove("over");
-  if (e.dataTransfer.files[0]) ingest(e.dataTransfer.files[0]);
+  ingestMany(e.dataTransfer.files);
 });
+
+async function ingestMany(fileList) {
+  const files = [...(fileList || [])];
+  if (!files.length) return;
+  let verified = 0, flagged = 0, rejected = 0;
+  for (const f of files) {
+    const status = await ingest(f);
+    if (status === "verified") verified++;
+    else if (status === "flagged") flagged++;
+    else if (status === "rejected") rejected++;
+  }
+  if (files.length > 1) {
+    dz.textContent = `${files.length} manifests ingested: ${verified} verified, ${flagged} flagged, ${rejected} rejected.`;
+  }
+}
 
 async function ingest(f) {
   let m;
-  try { m = JSON.parse(await f.text()); } catch { dz.textContent = "Not valid JSON."; return; }
+  try { m = JSON.parse(await f.text()); } catch { dz.textContent = "Not valid JSON: " + f.name; return "error"; }
   const { ok } = await verifyManifest(m);
   const status = !ok ? "rejected" : m.verdict?.overall === "VERIFIED" ? "verified" : "flagged";
   const row = {
@@ -182,4 +195,5 @@ async function ingest(f) {
   dz.textContent = ok
     ? "Manifest verified and ingested: " + row.order
     : "Manifest REJECTED (integrity failure) and logged: " + row.order;
+  return status;
 }

@@ -1,5 +1,7 @@
 # Truthbox
 
+[![CI](https://github.com/N9601/IQOO2k26/actions/workflows/ci.yml/badge.svg)](https://github.com/N9601/IQOO2k26/actions/workflows/ci.yml)
+
 AR-verified unboxing to eliminate return fraud in Indian D2C commerce.
 
 Return fraud costs Indian D2C brands an estimated Rs 3,500 Cr per year. Empty-box claims, item swaps, serial substitution and inflated damage claims are undetectable after the fact because no trustworthy evidence exists from the moment the parcel was opened. Truthbox turns the 30 seconds of unboxing into signed, verifiable, dispute-ready evidence, with every sensitive byte processed on the buyer's device.
