@@ -5,6 +5,7 @@
  */
 
 import { verifyManifest, HashChain, merkleRoot, generateSigningKey, signManifest, hex } from "./crypto.js";
+import { openReport } from "./report.js";
 
 const $ = (id) => document.getElementById(id);
 
@@ -96,8 +97,11 @@ async function loadManifest(m) {
   await render();
 }
 
+let lastResults = [];
+
 async function render() {
   const { ok, results } = await verifyManifest(current);
+  lastResults = results;
   const bv = $("bigverdict");
   bv.className = "bigverdict " + (ok ? "ok" : "fail");
   $("verdictGlyph").innerHTML = ok ? "&#10003;" : "&#10007;";
@@ -127,6 +131,11 @@ merkle     ${m.chain?.merkleRoot ?? "?"}
 key        ${m.signature?.publicKeyJwk?.x?.slice(0, 24) ?? "?"}...
 signature  ${m.signature?.value?.slice(0, 44) ?? "?"}...</pre>`;
 }
+
+$("reportBtn").addEventListener("click", () => {
+  if (!current) return;
+  if (!openReport(current, lastResults)) alert("Popup blocked. Allow popups to export the report.");
+});
 
 /* ---------- chain visualization ---------- */
 
