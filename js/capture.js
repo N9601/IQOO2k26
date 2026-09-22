@@ -11,6 +11,7 @@
  */
 
 import { HashChain, merkleRoot, generateSigningKey, signManifest, sha256, hex } from "./crypto.js";
+import { manifestToLink } from "./share.js";
 import { loadDetector, detect } from "./detect.js";
 import { loadOcr, readLabel } from "./ocr.js";
 
@@ -578,6 +579,16 @@ function showResult(m) {
   );
   $("downloadVideo").disabled = !state.videoBlob;
   $("downloadVideo").onclick = () => state.videoBlob && downloadBlob(state.videoBlob, `truthbox-${m.order.id}.webm`);
+
+  $("shareLink").onclick = async () => {
+    const url = await manifestToLink(m, new URL("verify.html", location.href).href);
+    try {
+      await navigator.clipboard.writeText(url);
+      $("shareLink").textContent = "Link copied (" + Math.round(url.length / 1024) + " KB)";
+    } catch {
+      window.open(url, "_blank");
+    }
+  };
 }
 
 function downloadBlob(blob, name) {

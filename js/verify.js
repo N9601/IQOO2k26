@@ -6,6 +6,12 @@
 
 import { verifyManifest, HashChain, merkleRoot, generateSigningKey, signManifest, hex } from "./crypto.js";
 import { openReport } from "./report.js";
+import { linkFragmentToManifest } from "./share.js";
+
+// A verification link carries the whole manifest in its fragment.
+const loadFromHash = () => linkFragmentToManifest(location.hash).then((m) => { if (m) loadManifest(m); });
+loadFromHash();
+window.addEventListener("hashchange", loadFromHash);
 
 const $ = (id) => document.getElementById(id);
 
