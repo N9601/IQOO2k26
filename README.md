@@ -62,14 +62,20 @@ No camera available? The capture page drops into a clearly labeled simulation mo
 ## Architecture
 
 ```
-Capture              Understand           Verify                Sign                  Deliver
-getUserMedia   -->   TF.js detection  --> rule engine vs   --> Merkle root +     --> signed manifest
-frame throttle       Tesseract.js OCR     order record         ECDSA P-256           JSON download
-                     (all on-device)                           (WebCrypto,
-                                                               non-extractable key)
+             ON DEVICE (never leaves the phone)                    | CRYPTO BOUNDARY |   OFF DEVICE
+  +-----------+   +--------------+   +---------------+   +--------------------+   +------------------+
+  | Capture   |   | Understand   |   | Measure       |   | Sign               |   | Deliver          |
+  |-----------|   |--------------|   |---------------|   |--------------------|   |------------------|
+  | getUserM. |-->| COCO-SSD det |-->| QR px-per-mm  |-->| SHA-256 hash chain |-->| signed manifest  |
+  | 5fps hash |   | Tesseract OCR|   | vs SKU dims   |   | Merkle root        |   | JSON / link / QR |
+  | jsQR bind |   | (TF.js/WASM) |   | (jsQR corners)|   | ECDSA P-256 sign   |   | ONDC issue       |
+  +-----------+   +--------------+   +---------------+   +--------------------+   | dispute report   |
+      |               |                   |                     |                +------------------+
+   raw frames     detection tensors    depth-free           non-extractable            |
+   never sent     never sent           measurement          WebCrypto key         a few KB, signed
 ```
 
-Everything left of the signature stays on the device: raw frames, detection tensors, OCR crops. Only the signed manifest, a few kilobytes, crosses the boundary to the seller.
+Everything left of the crypto boundary stays on the device: raw frames, detection tensors, OCR crops, the private key. Only the signed manifest, a few kilobytes, crosses to the seller. On production Android the boundary is a hardware TEE (Keystore + Play Integrity); in this web build it is a non-extractable WebCrypto key. The manifest schema and verifier are identical either way.
 
 ## Threat model
 
