@@ -42,6 +42,22 @@ test("hash chain: every link depends on the previous one", async () => {
   assert.equal(hex(chain.head), chain.links[2].h);
 });
 
+test("hash chain: concurrent adds still chain each link to the one before", async () => {
+  const chain = new HashChain();
+  const frames = [1, 2, 3, 4].map((v) => new Uint8Array(32).fill(v));
+  await Promise.all(frames.map((f) => chain.add(f)));
+  const te = new TextEncoder();
+  let prev = new Uint8Array(32);
+  for (const [n, link] of chain.links.entries()) {
+    assert.equal(link.i, n);
+    const payload = new Uint8Array([
+      ...frames[n], ...te.encode(String(link.t)), ...te.encode(String(link.m)), ...prev,
+    ]);
+    assert.equal(hex(await sha256(payload)), link.h, `link ${n} does not extend link ${n - 1}`);
+    prev = unhex(link.h);
+  }
+});
+
 test("merkle root is order-sensitive and deterministic", async () => {
   const hashes = [];
   for (let i = 0; i < 5; i++) hashes.push(hex(await sha256(new Uint8Array([i]))));

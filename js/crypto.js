@@ -61,9 +61,24 @@ export class HashChain {
     this.links = [];
     this.head = new Uint8Array(32); // genesis: 32 zero bytes
     this.t0 = performance.now();
+    this.queue = Promise.resolve();
   }
 
-  async add(frameBytes) {
+  /* Appends run strictly one after another, so a caller that adds a
+   * frame while the previous hash is still pending can never chain
+   * against a stale head. */
+  add(frameBytes) {
+    const next = this.queue.then(() => this.append(frameBytes));
+    this.queue = next.catch(() => {});
+    return next;
+  }
+
+  /* Resolves once every frame added so far is in the chain. */
+  settled() {
+    return this.queue;
+  }
+
+  async append(frameBytes) {
     const t = Date.now();
     const m = Math.round(performance.now() - this.t0);
     const payload = concat(frameBytes, te.encode(String(t)), te.encode(String(m)), this.head);
