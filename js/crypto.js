@@ -48,12 +48,19 @@ function concat(...arrays) {
 }
 
 /* Deterministic JSON with recursively sorted keys, so the byte
- * sequence that gets signed is reproducible by any verifier. */
+ * sequence that gets signed is reproducible by any verifier. The value
+ * is first normalized through a JSON round trip, so undefined fields,
+ * functions and toJSON values sign exactly as they will read back from
+ * the exported file. */
 export function canonicalJson(value) {
+  return sortedJson(JSON.parse(JSON.stringify(value)));
+}
+
+function sortedJson(value) {
   if (value === null || typeof value !== "object") return JSON.stringify(value);
-  if (Array.isArray(value)) return "[" + value.map(canonicalJson).join(",") + "]";
+  if (Array.isArray(value)) return "[" + value.map(sortedJson).join(",") + "]";
   const keys = Object.keys(value).sort();
-  return "{" + keys.map((k) => JSON.stringify(k) + ":" + canonicalJson(value[k])).join(",") + "}";
+  return "{" + keys.map((k) => JSON.stringify(k) + ":" + sortedJson(value[k])).join(",") + "}";
 }
 
 export class HashChain {

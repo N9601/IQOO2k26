@@ -29,6 +29,26 @@ test("canonicalJson sorts keys at every depth", () => {
   assert.equal(a, '{"a":{"c":[3,{"y":5,"z":4}],"d":2},"b":1}');
 });
 
+test("canonicalJson signs exactly what a JSON round trip reads back", () => {
+  const value = { a: undefined, b: [undefined, 1], c: new Date(0), d: -0, e: () => 1 };
+  assert.equal(canonicalJson(value), canonicalJson(JSON.parse(JSON.stringify(value))));
+  assert.equal(canonicalJson(value), '{"b":[null,1],"c":"1970-01-01T00:00:00.000Z","d":0}');
+});
+
+test("canonicalJson keeps unicode and float values stable", () => {
+  const value = { "é": "हिंदी", z: 0.1 + 0.2, a: 1e21 };
+  const out = canonicalJson(value);
+  assert.equal(out, '{"a":1e+21,"z":0.30000000000000004,"é":"हिंदी"}');
+  assert.equal(canonicalJson(JSON.parse(out)), out);
+});
+
+test("a manifest with undefined fields still verifies after export", async () => {
+  const m = await buildSignedManifest({ ocr: undefined, vision: { detection: undefined } });
+  const exported = JSON.parse(JSON.stringify(m));
+  const { ok, results } = await verifyManifest(exported);
+  assert.equal(ok, true, JSON.stringify(results, null, 2));
+});
+
 test("hash chain: every link depends on the previous one", async () => {
   const chain = new HashChain();
   const frame = new Uint8Array(64).fill(7);
@@ -69,7 +89,7 @@ test("merkle root is order-sensitive and deterministic", async () => {
   assert.notEqual(await merkleRoot(swapped), root1);
 });
 
-async function buildSignedManifest() {
+async function buildSignedManifest(extra = {}) {
   const chain = new HashChain();
   const frame = new Uint8Array(256);
   for (let i = 0; i < 12; i++) {
@@ -94,6 +114,7 @@ async function buildSignedManifest() {
       links: chain.links,
     },
     verdict: { overall: "VERIFIED" },
+    ...extra,
   };
   manifest.signature = {
     alg: "ECDSA-P256-SHA256",
