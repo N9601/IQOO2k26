@@ -539,6 +539,9 @@ async function finalize() {
     if (blob.size > 0) state.videoBlob = blob;
   }
 
+  // A frame hashed just before the timer stopped may still be pending;
+  // seal only once it is in, so the root and head cover every link.
+  await state.chain.settled();
   const links = state.chain.links;
   const root = await merkleRoot(links.map((l) => l.h));
   let videoInfo = null;
