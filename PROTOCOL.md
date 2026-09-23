@@ -59,7 +59,7 @@ The verdict, timestamps, order binding, nonce, chain and video hash are all insi
 
 A verifier MUST:
 
-1. Check `chain.links` is non-empty.
+1. Check `chain.links` is non-empty and every link is well formed: `h` is 64 lowercase hex digits and `m` is a finite number.
 2. Check `links[i].m <= links[i+1].m` for all i (monotonic clock).
 3. Check `chain.head == links[last].h`.
 4. Recompute the Merkle root from the link hashes; check equality with `chain.merkleRoot`.

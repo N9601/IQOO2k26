@@ -180,3 +180,27 @@ test("clock rollback is detected", async () => {
   const { results } = await verifyManifest(m);
   assert.equal(results.find((r) => r.check === "Monotonic clock").ok, false);
 });
+
+test("unhex rejects input that is not hex", () => {
+  for (const bad of ["zz", "0g", "abc", 5, undefined]) {
+    assert.throws(() => unhex(bad), TypeError, String(bad));
+  }
+  assert.deepEqual(unhex("00FFab"), new Uint8Array([0, 255, 171]));
+});
+
+test("malformed manifests are rejected, never thrown on", async () => {
+  const h = "a".repeat(64);
+  for (const bad of [
+    null, 42, "manifest", [],
+    { chain: { links: [{}] } },
+    { chain: { links: [{ i: 0, m: 0, h: 5 }] } },
+    { chain: { links: [{ i: 0, m: 0, h: [h] }] } },
+    { chain: { links: [{ i: 0, m: 0, h: "g".repeat(64) }] } },
+    { chain: { links: [{ i: 0, m: 0, h }, { i: 1, m: "later", h }] } },
+  ]) {
+    const { ok, results } = await verifyManifest(bad);
+    assert.equal(ok, false, JSON.stringify(bad));
+    assert.equal(results[0].check, "Chain present");
+    assert.equal(results[0].ok, false);
+  }
+});

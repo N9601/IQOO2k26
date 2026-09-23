@@ -21,6 +21,10 @@ export function hex(bytes) {
 }
 
 export function unhex(str) {
+  // parseInt would quietly turn "zz" into 0; reject anything that is not hex.
+  if (typeof str !== "string" || !/^(?:[0-9a-fA-F]{2})*$/.test(str)) {
+    throw new TypeError("unhex: expected an even-length hex string");
+  }
   const out = new Uint8Array(str.length / 2);
   for (let i = 0; i < out.length; i++) out[i] = parseInt(str.substr(i * 2, 2), 16);
   return out;
@@ -149,9 +153,17 @@ export async function verifyManifest(manifest) {
   const results = [];
   const push = (check, ok, detail) => results.push({ check, ok, detail });
 
-  const chain = manifest.chain;
+  const chain = manifest?.chain;
   if (!chain || !Array.isArray(chain.links) || chain.links.length === 0) {
     push("Chain present", false, "Manifest has no hash chain");
+    return { ok: false, results };
+  }
+  // Every link must be well formed before anything is recomputed from it:
+  // a 64-digit lowercase hex hash and a numeric monotonic time.
+  const bad = chain.links.findIndex((l) =>
+    typeof l?.h !== "string" || !/^[0-9a-f]{64}$/.test(l.h) || !Number.isFinite(l.m));
+  if (bad !== -1) {
+    push("Chain present", false, `Link ${bad} is malformed`);
     return { ok: false, results };
   }
   push("Chain present", true, `${chain.links.length} frame links`);
