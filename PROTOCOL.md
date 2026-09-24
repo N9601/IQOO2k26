@@ -24,7 +24,7 @@ Properties:
 
 ## 2. Merkle root
 
-The Merkle root is computed over the ordered link hashes with SHA-256. At each level, nodes are paired left to right; an odd final node is paired with itself. The root commits to the exact set and order of all links.
+The Merkle root is computed over the ordered link hashes with SHA-256. At each level, nodes are paired left to right; an odd final node is paired with itself. The root commits to the exact set and order of all links. Self-pairing means a link list ending `[.., x]` and one ending `[.., x, x]` share a root, so the verifier also requires every link hash to be distinct; genuine links always are, since each one hashes its predecessor.
 
 ## 3. Signing key
 
@@ -62,7 +62,7 @@ A verifier MUST:
 1. Check `chain.links` is non-empty and every link is well formed: `h` is 64 lowercase hex digits and `m` is a finite number.
 2. Check `links[i].m <= links[i+1].m` for all i (monotonic clock).
 3. Check `chain.head == links[last].h`.
-4. Recompute the Merkle root from the link hashes; check equality with `chain.merkleRoot`.
+4. Check every link hash is distinct, then recompute the Merkle root from the link hashes; check equality with `chain.merkleRoot`.
 5. Import `signature.publicKeyJwk`, rebuild the canonical JSON of the manifest without `signature`, verify the ECDSA signature.
 
 All five checks pass or the manifest is rejected. The verifier runs offline; no Truthbox service is consulted.

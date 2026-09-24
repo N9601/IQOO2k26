@@ -89,10 +89,10 @@ test("merkle root is order-sensitive and deterministic", async () => {
   assert.notEqual(await merkleRoot(swapped), root1);
 });
 
-async function buildSignedManifest(extra = {}) {
+async function buildSignedManifest(extra = {}, frames = 12) {
   const chain = new HashChain();
   const frame = new Uint8Array(256);
-  for (let i = 0; i < 12; i++) {
+  for (let i = 0; i < frames; i++) {
     frame.fill(i);
     await chain.add(frame);
   }
@@ -100,7 +100,7 @@ async function buildSignedManifest(extra = {}) {
   const manifest = {
     truthbox: "1.0",
     order: { id: "TB-TEST", nonce: "ab12", expectedClass: "book", serialPattern: "X" },
-    capture: { startedAt: "s", completedAt: "c", frameCount: 12, hashRateFps: 5, simulated: true },
+    capture: { startedAt: "s", completedAt: "c", frameCount: frames, hashRateFps: 5, simulated: true },
     steps: [],
     vision: {},
     ocr: null,
@@ -203,4 +203,30 @@ test("malformed manifests are rejected, never thrown on", async () => {
     assert.equal(results[0].check, "Chain present");
     assert.equal(results[0].ok, false);
   }
+});
+
+test("duplicating the last frame link cannot reuse the merkle root", async () => {
+  // With odd nodes paired with themselves, [.., x] and [.., x, x] hash to
+  // the same root, and the head and clock checks still pass. The verifier
+  // must reject the repeated link on its own, not lean on the signature.
+  const m = await buildSignedManifest({}, 11);
+  const links = m.chain.links;
+  links.push({ ...links[links.length - 1] });
+  assert.equal(await merkleRoot(links.map((l) => l.h)), m.chain.merkleRoot);
+  const { ok, results } = await verifyManifest(m);
+  assert.equal(ok, false);
+  assert.equal(results.find((r) => r.check === "Chain head").ok, true);
+  assert.equal(results.find((r) => r.check === "Monotonic clock").ok, true);
+  assert.equal(results.find((r) => r.check === "Merkle root").ok, false);
+});
+
+test("merkle root edge cases: empty, single leaf, odd count", async () => {
+  assert.equal(await merkleRoot([]), "0".repeat(64));
+  const leaf = hex(await sha256(new Uint8Array([1])));
+  assert.equal(await merkleRoot([leaf]), leaf);
+  const three = [];
+  for (let i = 0; i < 3; i++) three.push(hex(await sha256(new Uint8Array([i]))));
+  const pair = async (a, b) => hex(await sha256(new Uint8Array([...unhex(a), ...unhex(b)])));
+  const expected = await pair(await pair(three[0], three[1]), await pair(three[2], three[2]));
+  assert.equal(await merkleRoot(three), expected);
 });

@@ -178,9 +178,15 @@ export async function verifyManifest(manifest) {
   const headOk = chain.links[chain.links.length - 1].h === chain.head;
   push("Chain head", headOk, headOk ? "Head matches final link" : "Head does not match final link");
 
-  const root = await merkleRoot(chain.links.map((l) => l.h));
-  const rootOk = root === chain.merkleRoot;
-  push("Merkle root", rootOk, rootOk ? root.slice(0, 16) + "... recomputed and matched" : "Recomputed root differs: chain was edited");
+  // Pairing an odd node with itself means a list ending [.., x] and one
+  // ending [.., x, x] share a root. Genuine links are all distinct (each
+  // hashes its predecessor), so a repeated hash is a padding forgery.
+  const hashes = chain.links.map((l) => l.h);
+  const distinct = new Set(hashes).size === hashes.length;
+  const root = await merkleRoot(hashes);
+  const rootOk = distinct && root === chain.merkleRoot;
+  push("Merkle root", rootOk, rootOk ? root.slice(0, 16) + "... recomputed and matched"
+    : !distinct ? "Repeated frame link: duplicated to forge the same root" : "Recomputed root differs: chain was edited");
 
   let sigOk = false;
   try {
