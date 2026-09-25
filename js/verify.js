@@ -6,6 +6,7 @@
 
 import { verifyManifest, HashChain, merkleRoot, generateSigningKey, signManifest, hex } from "./crypto.js";
 import { openReport } from "./report.js";
+import { esc, imageSrc } from "./html.js";
 import { linkFragmentToManifest } from "./share.js";
 
 // A verification link carries the whole manifest in its fragment.
@@ -122,7 +123,7 @@ async function render() {
   $("checkList").innerHTML = results.map((r) => `
     <div class="checkrow ${r.ok ? "ok" : "fail"}">
       <span class="icon">${r.ok ? "&#10003;" : "&#10007;"}</span>
-      <div><div class="name">${r.check}</div><div class="detail">${r.detail}</div></div>
+      <div><div class="name">${esc(r.check)}</div><div class="detail">${esc(r.detail)}</div></div>
     </div>`).join("");
 
   renderViz(results);
@@ -143,21 +144,23 @@ async function render() {
   const snaps = m.snapshots && Object.keys(m.snapshots).length
     ? `<div style="display:flex; gap:10px; flex-wrap:wrap; margin:12px 0">` +
       Object.entries(m.snapshots).map(([k, s]) =>
-        `<figure style="margin:0"><img src="${String(s.jpeg).startsWith("data:image/") ? s.jpeg : ""}" alt="${k}" style="width:150px; border-radius:8px; border:1px solid var(--line)"><figcaption class="sub" style="margin-top:4px">${k} - signed still</figcaption></figure>`
+        `<figure style="margin:0"><img src="${imageSrc(s?.jpeg)}" alt="${esc(k)} snapshot" style="width:150px; border-radius:8px; border:1px solid var(--line)"><figcaption class="sub" style="margin-top:4px">${esc(k)} - signed still</figcaption></figure>`
       ).join("") + `</div>`
     : "";
+  // Every field below comes from the manifest, which may be hostile.
+  const f = (v, fallback = "?", n = Infinity) => esc(String(v ?? fallback).slice(0, n));
   $("manifestMeta").innerHTML = `
     <h3>Manifest</h3>
     <div style="display:flex; gap:6px; flex-wrap:wrap; margin:10px 0">${capBadges}</div>${snaps}
-    <pre class="block">order      ${m.order?.id ?? "?"}
-nonce      ${m.order?.nonce ?? "?"}
-captured   ${m.capture?.startedAt ?? "?"}
-frames     ${m.chain?.links?.length ?? 0}
-verdict    ${m.verdict?.overall ?? "?"}${m.capture?.simulated ? "  (simulated feed)" : ""}
-serial     ${m.verdict?.serial ?? "none"}
-merkle     ${m.chain?.merkleRoot ?? "?"}
-key        ${m.signature?.publicKeyJwk?.x?.slice(0, 24) ?? "?"}...
-signature  ${m.signature?.value?.slice(0, 44) ?? "?"}...</pre>`;
+    <pre class="block">order      ${f(m.order?.id)}
+nonce      ${f(m.order?.nonce)}
+captured   ${f(m.capture?.startedAt)}
+frames     ${f(m.chain?.links?.length, 0)}
+verdict    ${f(m.verdict?.overall)}${m.capture?.simulated ? "  (simulated feed)" : ""}
+serial     ${f(m.verdict?.serial, "none")}
+merkle     ${f(m.chain?.merkleRoot)}
+key        ${f(m.signature?.publicKeyJwk?.x, "?", 24)}...
+signature  ${f(m.signature?.value, "?", 44)}...</pre>`;
 }
 
 $("reportBtn").addEventListener("click", () => {
@@ -188,7 +191,7 @@ function renderViz(results) {
   // Localize what we can: the first monotonic-clock violation.
   let badIdx = -1;
   for (let i = 1; i < links.length; i++) {
-    if (links[i].m < links[i - 1].m) { badIdx = i; break; }
+    if (links[i]?.m < links[i - 1]?.m) { badIdx = i; break; }
   }
   const merkleOk = by["Merkle root"] !== false;
   const headOk = by["Chain head"] !== false;
@@ -200,7 +203,7 @@ function renderViz(results) {
     if (badIdx >= 0 && i >= badIdx) cls += " bad";
     else if (!merkleOk) cls += " warn";
     else if (!headOk && k === N - 1) cls += " bad";
-    html += `<div class="${cls}" title="frame ${links[i].i}  ${links[i].h.slice(0, 12)}..."></div>`;
+    html += `<div class="${cls}" title="frame ${esc(links[i]?.i)}  ${esc(String(links[i]?.h ?? "").slice(0, 12))}..."></div>`;
   }
   strip.innerHTML = html;
 
