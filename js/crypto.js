@@ -168,12 +168,12 @@ export async function verifyManifest(manifest) {
   }
   push("Chain present", true, `${chain.links.length} frame links`);
 
-  // Monotonic clock must strictly advance: catches reordering and splices.
+  // Monotonic clock must never go backwards: catches reordering and splices.
   let monotonic = true;
   for (let i = 1; i < chain.links.length; i++) {
     if (chain.links[i].m < chain.links[i - 1].m) { monotonic = false; break; }
   }
-  push("Monotonic clock", monotonic, monotonic ? "Timestamps strictly ordered" : "Clock went backwards: splice suspected");
+  push("Monotonic clock", monotonic, monotonic ? "Timestamps never go backwards" : "Clock went backwards: splice suspected");
 
   const headOk = chain.links[chain.links.length - 1].h === chain.head;
   push("Chain head", headOk, headOk ? "Head matches final link" : "Head does not match final link");

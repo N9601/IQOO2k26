@@ -20,7 +20,7 @@ Each link is recorded in the manifest as `{i, t, m, h}`: index, wall time, monot
 
 Properties:
 - Inserting, removing or reordering a frame changes every subsequent hash.
-- The monotonic timestamps must be strictly non-decreasing; a violation indicates a splice.
+- The monotonic timestamps must be non-decreasing; a violation indicates a splice.
 
 ## 2. Merkle root
 
