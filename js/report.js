@@ -4,10 +4,13 @@
  * Built entirely client-side from the verified manifest.
  */
 
+import { esc as escape, imageSrc } from "./html.js";
+
 export function openReport(m, results) {
   const ok = results.every((r) => r.ok);
   const when = new Date().toISOString();
-  const esc = (s) => String(s ?? "-").replace(/&/g, "&amp;").replace(/</g, "&lt;");
+  // The report window shares this origin, so every manifest field is escaped.
+  const esc = (s) => escape(s ?? "-");
 
   const checksRows = results.map((r) => `
     <tr>
@@ -17,7 +20,7 @@ export function openReport(m, results) {
     </tr>`).join("");
 
   const dims = m.verdict?.measuredMm
-    ? `~${m.verdict.measuredMm.wMm} x ${m.verdict.measuredMm.hMm} mm (planar QR calibration)`
+    ? `~${esc(m.verdict.measuredMm.wMm)} x ${esc(m.verdict.measuredMm.hMm)} mm (planar QR calibration)`
     : "not measured";
 
   const html = `<!DOCTYPE html>
@@ -66,7 +69,7 @@ export function openReport(m, results) {
   <tr><td>Serial read</td><td class="mono">${esc(m.verdict?.serial ?? "none")}</td></tr>
   <tr><td>Measured dimensions</td><td>${dims}</td></tr>
   <tr><td>Seal confirmed</td><td>${m.verdict?.sealConfirmed ? "yes, on camera" : "no"}</td></tr>
-  <tr><td>Frames in chain</td><td>${m.chain?.links?.length ?? 0} at ${esc(m.capture?.hashRateFps)} fps</td></tr>
+  <tr><td>Frames in chain</td><td>${esc(m.chain?.links?.length ?? 0)} at ${esc(m.capture?.hashRateFps)} fps</td></tr>
   <tr><td>Proof video SHA-256</td><td class="mono">${esc(m.video?.sha256 ?? "no video")}</td></tr>
 </table>
 
@@ -75,8 +78,8 @@ ${m.snapshots && Object.keys(m.snapshots).length ? `
 <div style="display:flex; gap:12px; flex-wrap:wrap">
   ${Object.entries(m.snapshots).map(([k, s]) => `
   <figure style="margin:0">
-    <img src="${String(s.jpeg).startsWith("data:image/") ? s.jpeg : ""}" alt="${esc(k)}" style="width:200px; border: 1px solid #c9c4b4;">
-    <figcaption style="font-size:11px; color:#5a564a; margin-top:3px">${esc(k)} step &middot; SHA-256 ${esc(String(s.sha256).slice(0, 16))}...</figcaption>
+    <img src="${imageSrc(s?.jpeg)}" alt="${esc(k)} snapshot" style="width:200px; border: 1px solid #c9c4b4;">
+    <figcaption style="font-size:11px; color:#5a564a; margin-top:3px">${esc(k)} step &middot; SHA-256 ${esc(String(s?.sha256).slice(0, 16))}...</figcaption>
   </figure>`).join("")}
 </div>` : ""}
 
