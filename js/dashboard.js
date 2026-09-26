@@ -180,6 +180,7 @@ async function ingestMany(fileList) {
 async function ingest(f) {
   let m;
   try { m = JSON.parse(await f.text()); } catch { dz.textContent = "Not valid JSON: " + f.name; return "error"; }
+  if (!m || typeof m !== "object" || Array.isArray(m)) { dz.textContent = "Not a Truthbox manifest: " + f.name; return "error"; }
   const { ok } = await verifyManifest(m);
   const status = !ok ? "rejected" : m.verdict?.overall === "VERIFIED" ? "verified" : "flagged";
   const row = {
