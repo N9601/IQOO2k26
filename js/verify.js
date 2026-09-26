@@ -10,7 +10,9 @@ import { esc, imageSrc } from "./html.js";
 import { linkFragmentToManifest } from "./share.js";
 
 // A verification link carries the whole manifest in its fragment.
-const loadFromHash = () => linkFragmentToManifest(location.hash).then((m) => { if (m) loadManifest(m); });
+const loadFromHash = () => linkFragmentToManifest(location.hash)
+  .then((m) => { if (m) loadManifest(m); })
+  .catch(() => showLoadError("This verification link is damaged or incomplete. Ask the sender for the manifest file or a fresh link."));
 loadFromHash();
 window.addEventListener("hashchange", loadFromHash);
 
@@ -18,6 +20,11 @@ const $ = (id) => document.getElementById(id);
 
 let original = null; // pristine manifest as loaded
 let current = null;  // possibly tampered copy
+
+function showLoadError(msg) {
+  $("loadError").textContent = msg;
+  $("loadError").style.display = msg ? "block" : "none";
+}
 
 /* ---------- load ---------- */
 
@@ -38,11 +45,14 @@ $("fileInput").addEventListener("change", (e) => {
 function readFile(f) {
   const r = new FileReader();
   r.onload = () => {
+    let m;
     try {
-      loadManifest(JSON.parse(r.result));
+      m = JSON.parse(r.result);
     } catch {
-      alert("Not valid JSON.");
+      showLoadError(f.name + " is not valid JSON.");
+      return;
     }
+    loadManifest(m);
   };
   r.readAsText(f);
 }
@@ -96,6 +106,11 @@ $("demoBtn").addEventListener("click", async () => {
 /* ---------- verify and render ---------- */
 
 async function loadManifest(m) {
+  if (!m || typeof m !== "object" || Array.isArray(m)) {
+    showLoadError("That file is JSON, but not a Truthbox manifest.");
+    return;
+  }
+  showLoadError("");
   original = JSON.parse(JSON.stringify(m));
   current = m;
   $("results").style.display = "block";
@@ -131,7 +146,7 @@ async function render() {
   const m = current;
   // Capture verdicts: what the device observed, distinct from the
   // integrity checks above (these are content, authenticated by the signature).
-  const v = m.verdict || {};
+  const v = m.verdict && typeof m.verdict === "object" ? m.verdict : {};
   const capRows = [
     ["Seal confirmed", v.sealConfirmed === true],
     ["SKU match", v.skuMatch === true],
@@ -141,7 +156,7 @@ async function render() {
   if ("qrSeenDuringCapture" in v) capRows.push(["Dispatch QR seen on camera", v.qrSeenDuringCapture === true]);
   const capBadges = capRows.map(([n, ok2]) =>
     `<span class="badge ${ok2 ? "ok" : "warn"}"><span class="dot"></span>${n}</span>`).join(" ");
-  const snaps = m.snapshots && Object.keys(m.snapshots).length
+  const snaps = m.snapshots && typeof m.snapshots === "object" && Object.keys(m.snapshots).length
     ? `<div style="display:flex; gap:10px; flex-wrap:wrap; margin:12px 0">` +
       Object.entries(m.snapshots).map(([k, s]) =>
         `<figure style="margin:0"><img src="${imageSrc(s?.jpeg)}" alt="${esc(k)} snapshot" style="width:150px; border-radius:8px; border:1px solid var(--line)"><figcaption class="sub" style="margin-top:4px">${esc(k)} - signed still</figcaption></figure>`
@@ -229,8 +244,8 @@ const ATTACKS = {
   },
   frame(m) {
     const links = m.chain?.links;
-    if (links?.length) {
-      const i = Math.floor(links.length / 2);
+    const i = Math.floor((links?.length || 0) / 2);
+    if (typeof links?.[i]?.h === "string") {
       links[i].h = links[i].h.slice(0, -4) + (links[i].h.endsWith("0000") ? "1111" : "0000");
     }
     return "One frame hash edited mid-chain. The recomputed Merkle root no longer matches the signed root.";
@@ -244,7 +259,7 @@ const ATTACKS = {
     return "Capture backdated by months to fit inside a return window. The timestamp is inside the signed payload.";
   },
   photo(m) {
-    const keys = Object.keys(m.snapshots || {});
+    const keys = Object.keys(m.snapshots || {}).filter((k) => m.snapshots[k] && typeof m.snapshots[k] === "object");
     if (!keys.length) return "This manifest carries no snapshots; capture one with the app to try this attack.";
     m.snapshots[keys[0]].jpeg = "data:image/jpeg;base64,/9j/4AAQSkZJRg==";
     return "The " + keys[0] + " photo replaced with a different image. The photos are inside the signed payload: signature fails.";

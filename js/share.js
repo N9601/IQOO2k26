@@ -27,13 +27,12 @@ export async function manifestToLink(manifest, verifyUrl) {
   return verifyUrl + "#m=" + b64url(gz);
 }
 
+/* Resolves to null when the fragment carries no manifest, and rejects
+ * when it does but cannot be decoded (truncated by a chat app, or edited),
+ * so the verifier can say the link is damaged instead of showing nothing. */
 export async function linkFragmentToManifest(hash) {
   if (!hash || !hash.startsWith("#m=")) return null;
-  try {
-    const gz = unb64url(hash.slice(3));
-    const raw = await pipe(gz, DecompressionStream, "gzip");
-    return JSON.parse(new TextDecoder().decode(raw));
-  } catch {
-    return null;
-  }
+  const gz = unb64url(hash.slice(3));
+  const raw = await pipe(gz, DecompressionStream, "gzip");
+  return JSON.parse(new TextDecoder().decode(raw));
 }
