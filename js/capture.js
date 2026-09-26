@@ -12,6 +12,7 @@
 
 import { HashChain, merkleRoot, generateSigningKey, signManifest, sha256, hex } from "./crypto.js";
 import { manifestToLink } from "./share.js";
+import { esc } from "./html.js";
 import { loadDetector, detect } from "./detect.js";
 import { loadOcr, readLabel } from "./ocr.js";
 
@@ -636,10 +637,12 @@ function showResult(m) {
     rows.splice(2, 0, ["Dimensions within tolerance", m.verdict.dimensionCheck === "pass",
       `Measured ~${m.verdict.measuredMm.wMm} x ${m.verdict.measuredMm.hMm} mm vs SKU ${m.order.dims.wMm} x ${m.order.dims.hMm ?? "?"} mm (QR-calibrated)`]);
   }
+  // Details carry the serial pattern and order fields, which arrive in the
+  // capture URL or a scanned QR, so they are escaped like any other input.
   $("verdictRows").innerHTML = rows.map(([name, ok2, detail]) => `
     <div class="checkrow ${ok2 ? "ok" : "fail"}">
       <span class="icon">${ok2 ? "&#10003;" : "&#10007;"}</span>
-      <div><div class="name">${name}</div><div class="detail">${detail}</div></div>
+      <div><div class="name">${esc(name)}</div><div class="detail">${esc(detail)}</div></div>
     </div>`).join("");
 
   $("chainSummary").textContent =
