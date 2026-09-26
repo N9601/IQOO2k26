@@ -258,8 +258,11 @@ const ATTACKS = {
     return "One frame hash edited mid-chain. The recomputed Merkle root no longer matches the signed root.";
   },
   drop(m) {
-    if (m.chain?.links?.length > 12) m.chain.links.splice(10, 10);
-    return "Ten frames silently removed, hiding ten seconds of the capture. Merkle root and head both break.";
+    const links = m.chain?.links;
+    if (!Array.isArray(links) || links.length < 3) return "Too few frames in this manifest to remove any from the middle.";
+    const n = Math.min(10, links.length - 2);
+    links.splice(Math.floor((links.length - n) / 2), n);
+    return `${n} frames silently removed from the middle, hiding ${n / 5} s of a 5 fps capture. The last link is untouched, so the head still matches, but the recomputed Merkle root does not.`;
   },
   time(m) {
     if (m.capture) m.capture.startedAt = "2026-01-01T09:00:00.000Z";
