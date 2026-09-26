@@ -4,6 +4,7 @@
  */
 
 import { verifyManifest, hex } from "./crypto.js";
+import { esc } from "./html.js";
 
 const $ = (id) => document.getElementById(id);
 
@@ -138,12 +139,14 @@ function badge(status) {
     review: ["info", "Manual review"],
   };
   const [cls, label] = map[status] || ["info", status];
-  return `<span class="badge ${cls}"><span class="dot"></span>${label}</span>`;
+  return `<span class="badge ${cls}"><span class="dot"></span>${esc(label)}</span>`;
 }
 
+// Rows come from ingested manifests (persisted in localStorage), so every
+// cell is escaped: a hostile manifest must not script the seller portal.
 function renderRows() {
   document.querySelector("#ordersTable tbody").innerHTML = loadRows()
-    .map((r) => `<tr><td>${r.order}</td><td>${r.item}</td><td class="hash">${r.serial}</td><td class="muted">${r.evidence}</td><td>${badge(r.status)}</td></tr>`)
+    .map((r) => `<tr><td>${esc(r.order)}</td><td>${esc(r.item)}</td><td class="hash">${esc(r.serial)}</td><td class="muted">${esc(r.evidence)}</td><td>${badge(r.status)}</td></tr>`)
     .join("");
 }
 renderRows();
