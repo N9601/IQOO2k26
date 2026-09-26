@@ -239,7 +239,14 @@ const ATTACKS = {
     return "Serial rewritten to SN00000001, the classic swap-fraud edit. The signed bytes no longer match.";
   },
   verdict(m) {
-    if (m.verdict) { m.verdict.overall = "VERIFIED"; m.verdict.skuMatch = true; m.verdict.serialMatch = true; }
+    const v = m.verdict;
+    if (!v || typeof v !== "object") return "This manifest carries no verdict to flip.";
+    if (v.overall === "VERIFIED") {
+      // Already clean, so the mirror-image edit: discrediting genuine evidence.
+      v.overall = "FLAGGED";
+      return "Verdict downgraded to FLAGGED, as someone discrediting genuine evidence would. The signature covers the verdict, so the edit is caught.";
+    }
+    v.overall = "VERIFIED"; v.skuMatch = true; v.serialMatch = true;
     return "Verdict flipped to VERIFIED. A fraudster cannot upgrade their own evidence: the signature covers the verdict.";
   },
   frame(m) {
