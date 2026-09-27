@@ -32,6 +32,7 @@ const I18N = {
     detected: "Detected: {label} ({pct}%)", matches: " - matches expected SKU class", expected: " - expected {cls}",
     setupTitle: "Verified unboxing", begin: "Begin capture", scanQr: "Scan dispatch QR instead", abort: "Abort",
     modelsLoaded: "On-device models loaded. Nothing you record will leave this phone.",
+    badPattern: "The serial pattern is not a valid regular expression. Fix it before starting.",
   },
   hi: {
     sealName: "सील जांच", sealBanner: "सीलबंद पार्सल कैमरे के सामने रखें", sealHint: "टैम्पर सील के सभी किनारे कैमरे को दिखाएं।", sealAction: "सील सही सलामत है",
@@ -43,6 +44,7 @@ const I18N = {
     detected: "पहचाना: {label} ({pct}%)", matches: " - अपेक्षित SKU से मेल", expected: " - अपेक्षित: {cls}",
     setupTitle: "सत्यापित अनबॉक्सिंग", begin: "कैप्चर शुरू करें", scanQr: "डिस्पैच QR स्कैन करें", abort: "रद्द करें",
     modelsLoaded: "मॉडल डिवाइस पर लोड हो गए। आपकी कोई रिकॉर्डिंग फोन से बाहर नहीं जाएगी।",
+    badPattern: "सीरियल पैटर्न सही रेगुलर एक्सप्रेशन नहीं है। शुरू करने से पहले इसे ठीक करें।",
   },
 };
 
@@ -204,13 +206,25 @@ async function scanDispatchQr() {
 /* ---------- capture lifecycle ---------- */
 
 async function startCapture() {
+  // The pattern is compiled at the label and sign steps; an invalid one
+  // would stall the capture there, so it is rejected before anything starts.
+  const serialPattern = $("serialPattern").value.trim() || "[A-Z0-9]{6,}";
+  try {
+    new RegExp(serialPattern);
+  } catch {
+    state.scripted = false;
+    $("setupError").textContent = t("badPattern");
+    $("setupError").style.display = "block";
+    return;
+  }
+  $("setupError").style.display = "none";
   $("startBtn").disabled = true;
   const p = state.scannedParams || params;
   state.order = {
     id: $("orderId").value.trim() || "TB-UNBOUND",
     nonce: p.get("nonce") || hex(crypto.getRandomValues(new Uint8Array(16))),
     expectedClass: $("skuClass").value,
-    serialPattern: $("serialPattern").value.trim() || "[A-Z0-9]{6,}",
+    serialPattern,
     boundVia: state.scannedParams ? "qr-scan" : params.get("nonce") ? "qr-link" : "manual",
     dims: p.get("dimw") ? { wMm: +p.get("dimw"), hMm: +p.get("dimh") || null, tolerancePct: 15 } : null,
     qrMm: +(p.get("qrmm") || 30),
