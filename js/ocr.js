@@ -7,12 +7,15 @@
 let worker = null;
 let loading = null;
 
+/* Deferred like loadDetector: a missing Tesseract runtime rejects. */
 export function loadOcr() {
   if (!loading) {
-    loading = Tesseract.createWorker("eng").then((w) => {
-      worker = w;
-      return w;
-    });
+    loading = Promise.resolve()
+      .then(() => Tesseract.createWorker("eng"))
+      .then((w) => {
+        worker = w;
+        return w;
+      });
   }
   return loading;
 }

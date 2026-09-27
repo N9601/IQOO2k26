@@ -8,12 +8,17 @@
 let model = null;
 let loading = null;
 
+/* If the TF.js runtime failed to load from the CDN, cocoSsd is undefined;
+ * deferring the call turns that into a rejection the caller handles,
+ * instead of an exception that stops the page script mid-start. */
 export function loadDetector() {
   if (!loading) {
-    loading = cocoSsd.load({ base: "lite_mobilenet_v2" }).then((m) => {
-      model = m;
-      return m;
-    });
+    loading = Promise.resolve()
+      .then(() => cocoSsd.load({ base: "lite_mobilenet_v2" }))
+      .then((m) => {
+        model = m;
+        return m;
+      });
   }
   return loading;
 }
