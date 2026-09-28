@@ -218,7 +218,9 @@ async function startCapture() {
     return;
   }
   $("setupError").style.display = "none";
-  $("startBtn").disabled = true;
+  // One capture per page: a second click (or the demo button while the
+  // camera prompt is open) must not start a parallel chain.
+  for (const id of ["startBtn", "scanQrBtn", "demoBtn"]) $(id).disabled = true;
   const p = state.scannedParams || params;
   state.order = {
     id: $("orderId").value.trim() || "TB-UNBOUND",
