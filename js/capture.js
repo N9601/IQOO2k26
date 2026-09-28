@@ -162,6 +162,10 @@ async function runScriptedTo(stepId, delay) {
 async function scanDispatchQr() {
   const status = $("qrScanStatus");
   status.style.display = "block";
+  if (typeof jsQR === "undefined") {
+    status.textContent = "The QR decoder did not load. Enter the order manually.";
+    return;
+  }
   let stream;
   try {
     stream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: "environment", width: { ideal: 1280 } } });
@@ -186,9 +190,12 @@ async function scanDispatchQr() {
       ctx.drawImage(video, 0, 0);
       const img = ctx.getImageData(0, 0, c.width, c.height);
       const qr = jsQR(img.data, img.width, img.height, { inversionAttempts: "dontInvert" });
-      if (qr && qr.data.includes("capture.html?")) {
+      // Any QR in view can be decoded; one that is not an absolute capture
+      // URL is skipped rather than thrown on, which would end the scan
+      // loop with the camera still running.
+      const p = qr && qr.data.includes("capture.html?") ? urlParams(qr.data) : null;
+      if (p) {
         stop();
-        const p = new URL(qr.data).searchParams;
         if (p.get("order")) $("orderId").value = p.get("order");
         if (p.get("cls")) $("skuClass").value = p.get("cls");
         if (p.get("serial")) $("serialPattern").value = p.get("serial");
@@ -201,6 +208,14 @@ async function scanDispatchQr() {
     requestAnimationFrame(tick);
   };
   tick();
+}
+
+function urlParams(text) {
+  try {
+    return new URL(text).searchParams;
+  } catch {
+    return null;
+  }
 }
 
 /* ---------- capture lifecycle ---------- */
