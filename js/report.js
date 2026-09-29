@@ -49,11 +49,11 @@ export function openReport(m, results) {
   .noprint button { padding: 8px 18px; font-size: 14px; cursor: pointer; }
 </style></head><body>
 <header>
-  <h1>TRUTHBOX &mdash; Unboxing Evidence Report</h1>
+  <h1>TRUTHBOX - Unboxing Evidence Report</h1>
   <div class="sub">Cryptographically verifiable chain-of-custody record &middot; Protocol v${esc(m.truthbox)}</div>
 </header>
 
-<div class="verdict">${ok ? "EVIDENCE VERIFIED: all integrity checks passed" : "EVIDENCE REJECTED: integrity check failure"} &mdash; capture verdict ${esc(m.verdict?.overall)}${demoTag}</div>
+<div class="verdict">${ok ? "EVIDENCE VERIFIED: all integrity checks passed" : "EVIDENCE REJECTED: integrity check failure"}. Capture verdict ${esc(m.verdict?.overall)}${demoTag}</div>
 
 <h2>Order</h2>
 <table class="kv">

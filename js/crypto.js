@@ -121,7 +121,7 @@ export async function merkleRoot(hexHashes) {
 }
 
 export async function generateSigningKey() {
-  // extractable: false — the private key can be used but never read,
+  // extractable: false means the private key can be used but never read,
   // the browser analogue of an Android Keystore TEE-resident key.
   const pair = await crypto.subtle.generateKey(
     { name: "ECDSA", namedCurve: "P-256" },
