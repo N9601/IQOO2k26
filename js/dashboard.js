@@ -187,7 +187,8 @@ async function ingest(f) {
     order: m.order?.id || "unknown",
     item: m.vision?.detection?.label || m.order?.expectedClass || "-",
     serial: m.verdict?.serial || "none read",
-    evidence: `manifest, ${m.chain?.links?.length || 0} frames` + (m.video ? " + video" : ""),
+    evidence: `manifest, ${m.chain?.links?.length || 0} frames` + (m.video ? " + video" : "") +
+      (m.capture?.scripted ? ", scripted demo" : m.capture?.simulated ? ", simulated feed" : ""),
     status,
   };
   try {

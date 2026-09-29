@@ -19,6 +19,11 @@ export function openReport(m, results) {
       <td>${esc(r.detail)}</td>
     </tr>`).join("");
 
+  // A demo capture is signed for real, so the report must say what it was.
+  const mode = m.capture?.scripted ? "SCRIPTED DEMO (detection and serial injected, not read from a parcel)"
+    : m.capture?.simulated ? "SIMULATED FEED (demo)" : "live camera";
+  const demoTag = m.capture?.scripted ? " (scripted demo capture)" : m.capture?.simulated ? " (simulated feed)" : "";
+
   const dims = m.verdict?.measuredMm
     ? `~${esc(m.verdict.measuredMm.wMm)} x ${esc(m.verdict.measuredMm.hMm)} mm (planar QR calibration)`
     : "not measured";
@@ -48,7 +53,7 @@ export function openReport(m, results) {
   <div class="sub">Cryptographically verifiable chain-of-custody record &middot; Protocol v${esc(m.truthbox)}</div>
 </header>
 
-<div class="verdict">${ok ? "EVIDENCE VERIFIED: all integrity checks passed" : "EVIDENCE REJECTED: integrity check failure"} &mdash; capture verdict ${esc(m.verdict?.overall)}</div>
+<div class="verdict">${ok ? "EVIDENCE VERIFIED: all integrity checks passed" : "EVIDENCE REJECTED: integrity check failure"} &mdash; capture verdict ${esc(m.verdict?.overall)}${demoTag}</div>
 
 <h2>Order</h2>
 <table class="kv">
@@ -57,7 +62,7 @@ export function openReport(m, results) {
   <tr><td>Expected item class</td><td>${esc(m.order?.expectedClass)}</td></tr>
   <tr><td>Capture started</td><td>${esc(m.capture?.startedAt)}</td></tr>
   <tr><td>Capture completed</td><td>${esc(m.capture?.completedAt)}</td></tr>
-  <tr><td>Capture mode</td><td>${m.capture?.simulated ? "SIMULATED FEED (demo)" : "live camera"}</td></tr>
+  <tr><td>Capture mode</td><td>${mode}</td></tr>
 </table>
 
 <h2>Integrity verification</h2>
