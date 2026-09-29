@@ -31,9 +31,11 @@ export function manifestToOndcIssue(m, verifyLink) {
           items: [{ descriptor: m.order?.expectedClass, serial: m.verdict?.serial ?? null }],
         },
         description: {
+          // A VERIFIED capture shows the right item arriving intact, which
+          // contradicts a return claim; a FLAGGED one recorded the problem.
           short_desc: flagged
-            ? "Return claim contested: Truthbox verified-unboxing evidence contradicts the claim"
-            : "Return claim supported by Truthbox verified-unboxing evidence",
+            ? "Return claim supported by Truthbox verified-unboxing evidence"
+            : "Return claim contested: Truthbox verified-unboxing evidence contradicts the claim",
           long_desc:
             `Cryptographically signed unboxing capture for order ${m.order?.id}. ` +
             `${m.chain?.links?.length ?? 0} frames hash-chained, Merkle root ${m.chain?.merkleRoot}, ` +
