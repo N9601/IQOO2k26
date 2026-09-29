@@ -80,13 +80,13 @@
 
   <!-- Order setup -->
   <section id="setup" class="card">
-    <h3>Verified unboxing</h3>
-    <p class="sub">Confirm the order this capture is bound to. In production this arrives via the Truthbox QR printed on the parcel and cannot be edited.</p>
+    <h3 data-i18n="setupTitle">Verified unboxing</h3>
+    <p class="sub" data-i18n="setupIntro">Confirm the order this capture is bound to. In production this arrives via the Truthbox QR printed on the parcel and cannot be edited.</p>
     <div class="spacer" style="height:14px"></div>
-    <label class="field" for="orderId">Order ID</label>
+    <label class="field" for="orderId" data-i18n="orderLabel">Order ID</label>
     <input type="text" id="orderId" value="">
     <div class="spacer" style="height:12px"></div>
-    <label class="field" for="skuClass">Expected item (SKU visual class)</label>
+    <label class="field" for="skuClass" data-i18n="skuLabel">Expected item (SKU visual class)</label>
     <select id="skuClass">
       <option value="cell phone">Smartphone / phone case</option>
       <option value="bottle">Bottle (cosmetics, supplements)</option>
@@ -98,15 +98,15 @@
       <option value="scissors">Scissors / tools</option>
     </select>
     <div class="spacer" style="height:12px"></div>
-    <label class="field" for="serialPattern">Expected serial pattern (regex)</label>
+    <label class="field" for="serialPattern" data-i18n="serialLabel">Expected serial pattern (regex)</label>
     <input type="text" id="serialPattern" value="[A-Z0-9]{6,}">
     <div class="spacer" style="height:16px"></div>
-    <button class="btn primary" id="startBtn" style="width:100%">Begin capture</button>
-    <button class="btn" id="scanQrBtn" style="width:100%; margin-top:10px">Scan dispatch QR instead</button>
-    <button class="btn" id="demoBtn" style="width:100%; margin-top:10px">Run scripted demo (no camera needed)</button>
+    <button class="btn primary" id="startBtn" style="width:100%" data-i18n="begin">Begin capture</button>
+    <button class="btn" id="scanQrBtn" style="width:100%; margin-top:10px" data-i18n="scanQr">Scan dispatch QR instead</button>
+    <button class="btn" id="demoBtn" style="width:100%; margin-top:10px" data-i18n="demo">Run scripted demo (no camera needed)</button>
     <p class="sub" id="setupError" role="alert" style="margin-top:8px; display:none; color:var(--danger)"></p>
     <p class="sub" id="qrScanStatus" style="margin-top:8px; display:none"></p>
-    <p class="sub" id="modelStatus" style="margin-top:10px">Loading on-device models...</p>
+    <p class="sub" id="modelStatus" style="margin-top:10px" data-i18n="modelsLoading">Loading on-device models...</p>
   </section>
 
   <!-- Live capture -->
@@ -127,13 +127,13 @@
     </div>
     <div class="steps" id="stepsRail"></div>
     <div class="actionrow">
-      <button class="btn danger small" id="abortBtn">Abort</button>
+      <button class="btn danger small" id="abortBtn" data-i18n="abort">Abort</button>
       <button class="btn primary" id="actionBtn">Seal is intact</button>
     </div>
     <p class="sub" id="liveStatus" style="margin-top:10px" role="status" aria-live="polite"></p>
     <div class="card" id="simNote">
-      <h3>Simulation mode</h3>
-      <p class="sub">No camera is available, so a synthetic unboxing feed is being generated locally. Every other part of the pipeline (hash chain, detection, OCR, signing) runs exactly as it would on a real camera.</p>
+      <h3 data-i18n="simTitle">Simulation mode</h3>
+      <p class="sub" data-i18n="simBody">No camera is available, so a synthetic unboxing feed is being generated locally. Every other part of the pipeline (hash chain, detection, OCR, signing) runs exactly as it would on a real camera.</p>
     </div>
   </section>
 
@@ -148,15 +148,15 @@
       <h3>Chain of custody</h3>
       <pre class="block" id="chainSummary"></pre>
       <div class="actionrow">
-        <button class="btn primary" id="downloadManifest">Download signed manifest</button>
-        <button class="btn" id="downloadVideo">Proof video</button>
+        <button class="btn primary" id="downloadManifest" data-i18n="download">Download signed manifest</button>
+        <button class="btn" id="downloadVideo" data-i18n="proofVideo">Proof video</button>
       </div>
       <div class="actionrow" style="margin-top:10px">
-        <button class="btn" id="shareLink" style="flex:1">Copy verification link</button>
+        <button class="btn" id="shareLink" style="flex:1" data-i18n="copyLink">Copy verification link</button>
       </div>
       <div class="actionrow" style="margin-top:10px">
-        <a class="btn" href="verify.html" style="flex:1">Open verifier</a>
-        <button class="btn small" id="restartBtn">New capture</button>
+        <a class="btn" href="verify.html" style="flex:1" data-i18n="openVerifier">Open verifier</a>
+        <button class="btn small" id="restartBtn" data-i18n="newCapture">New capture</button>
       </div>
     </div>
   </section>

@@ -18,9 +18,9 @@ import { loadOcr, readLabel } from "./ocr.js";
 
 const $ = (id) => document.getElementById(id);
 
-/* Buyer-facing strings, English and Hindi. The buyer picks a language
- * on the setup screen; evidence and manifests stay English for the
- * seller and dispute side. */
+/* Buyer-facing strings, English and Hindi. The buyer can switch language
+ * at any point, mid-capture included; evidence and manifests stay English
+ * for the seller and dispute side. */
 const I18N = {
   en: {
     sealName: "Seal check", sealBanner: "Position the sealed parcel", sealHint: "Show all sides of the tamper seal to the camera.", sealAction: "Seal is intact",
@@ -33,6 +33,21 @@ const I18N = {
     setupTitle: "Verified unboxing", begin: "Begin capture", scanQr: "Scan dispatch QR instead", abort: "Abort",
     modelsLoaded: "On-device models loaded. Nothing you record will leave this phone.",
     badPattern: "The serial pattern is not a valid regular expression. Fix it before starting.",
+    setupIntro: "Confirm the order this capture is bound to. In production this arrives via the Truthbox QR printed on the parcel and cannot be edited.",
+    orderLabel: "Order ID", skuLabel: "Expected item (SKU visual class)", serialLabel: "Expected serial pattern (regex)",
+    demo: "Run scripted demo (no camera needed)", modelsLoading: "Loading on-device models...",
+    modelsFailed: "Model load failed ({err}). Capture still runs; detection and OCR will be marked unavailable.",
+    qrNoDecoder: "The QR decoder did not load. Enter the order manually.", qrNoCamera: "No camera available for scanning. Enter the order manually.",
+    qrPoint: "Point the camera at the dispatch QR...", qrTimeout: "No QR found in 30 seconds. Enter the order manually.",
+    qrBound: "Order bound from dispatch QR: {order}. Begin capture when ready.",
+    simTitle: "Simulation mode",
+    simBody: "No camera is available, so a synthetic unboxing feed is being generated locally. Every other part of the pipeline (hash chain, detection, OCR, signing) runs exactly as it would on a real camera.",
+    scriptedTitle: "Scripted demo",
+    scriptedBody: "Auto-running a clean verified capture for demonstration. The hash chain, Merkle root and signature are real; the detection and serial are injected and the manifest records them as scripted-demo, so the evidence never claims more than was seen.",
+    okSub: "All checks passed. Return window active for 7 days. This manifest is dispute-ready evidence.",
+    flaggedSub: "Capture completed and signed, but one or more checks did not pass. The manifest records exactly what was seen.",
+    download: "Download signed manifest", proofVideo: "Proof video", copyLink: "Copy verification link", linkCopied: "Link copied ({kb} KB)",
+    openVerifier: "Open verifier", newCapture: "New capture",
   },
   hi: {
     sealName: "सील जांच", sealBanner: "सीलबंद पार्सल कैमरे के सामने रखें", sealHint: "टैम्पर सील के सभी किनारे कैमरे को दिखाएं।", sealAction: "सील सही सलामत है",
@@ -45,6 +60,21 @@ const I18N = {
     setupTitle: "सत्यापित अनबॉक्सिंग", begin: "कैप्चर शुरू करें", scanQr: "डिस्पैच QR स्कैन करें", abort: "रद्द करें",
     modelsLoaded: "मॉडल डिवाइस पर लोड हो गए। आपकी कोई रिकॉर्डिंग फोन से बाहर नहीं जाएगी।",
     badPattern: "सीरियल पैटर्न सही रेगुलर एक्सप्रेशन नहीं है। शुरू करने से पहले इसे ठीक करें।",
+    setupIntro: "पुष्टि करें कि यह कैप्चर किस ऑर्डर से जुड़ा है। असली इस्तेमाल में यह पार्सल पर छपे Truthbox QR से आता है और बदला नहीं जा सकता।",
+    orderLabel: "ऑर्डर आईडी", skuLabel: "अपेक्षित सामान (SKU श्रेणी)", serialLabel: "अपेक्षित सीरियल पैटर्न (regex)",
+    demo: "स्क्रिप्टेड डेमो चलाएं (कैमरे की जरूरत नहीं)", modelsLoading: "डिवाइस पर मॉडल लोड हो रहे हैं...",
+    modelsFailed: "मॉडल लोड नहीं हो सके ({err})। कैप्चर फिर भी चलेगा; पहचान और OCR अनुपलब्ध दर्ज किए जाएंगे।",
+    qrNoDecoder: "QR डिकोडर लोड नहीं हुआ। ऑर्डर की जानकारी खुद भरें।", qrNoCamera: "स्कैन के लिए कैमरा उपलब्ध नहीं है। ऑर्डर की जानकारी खुद भरें।",
+    qrPoint: "कैमरे को डिस्पैच QR की ओर रखें...", qrTimeout: "30 सेकंड में कोई QR नहीं मिला। ऑर्डर की जानकारी खुद भरें।",
+    qrBound: "डिस्पैच QR से ऑर्डर जुड़ गया: {order}। तैयार हों तो कैप्चर शुरू करें।",
+    simTitle: "सिमुलेशन मोड",
+    simBody: "कैमरा उपलब्ध नहीं है, इसलिए डिवाइस पर ही एक कृत्रिम अनबॉक्सिंग फीड बनाई जा रही है। बाकी पूरी प्रक्रिया (हैश चेन, पहचान, OCR, हस्ताक्षर) ठीक वैसे ही चलती है जैसे असली कैमरे पर।",
+    scriptedTitle: "स्क्रिप्टेड डेमो",
+    scriptedBody: "प्रदर्शन के लिए एक साफ सत्यापित कैप्चर अपने आप चल रहा है। हैश चेन, मर्कल रूट और हस्ताक्षर असली हैं; पहचान और सीरियल डाले गए हैं और मैनिफेस्ट उन्हें scripted-demo के रूप में दर्ज करता है, ताकि सबूत कभी भी देखी गई चीज से ज्यादा दावा न करे।",
+    okSub: "सभी जांच सफल रहीं। रिटर्न विंडो 7 दिनों के लिए सक्रिय है। यह मैनिफेस्ट विवाद में पेश करने लायक सबूत है।",
+    flaggedSub: "कैप्चर पूरा होकर हस्ताक्षरित हो गया, लेकिन एक या अधिक जांच सफल नहीं रहीं। मैनिफेस्ट में ठीक वही दर्ज है जो देखा गया।",
+    download: "हस्ताक्षरित मैनिफेस्ट डाउनलोड करें", proofVideo: "प्रमाण वीडियो", copyLink: "सत्यापन लिंक कॉपी करें", linkCopied: "लिंक कॉपी हो गया ({kb} KB)",
+    openVerifier: "सत्यापन पेज खोलें", newCapture: "नया कैप्चर",
   },
 };
 
@@ -53,8 +83,18 @@ try { lang = localStorage.getItem("tb-lang") || "en"; } catch {}
 
 function t(key, vars) {
   let s = (I18N[lang] && I18N[lang][key]) || I18N.en[key] || key;
-  for (const k in vars || {}) s = s.replace("{" + k + "}", vars[k]);
+  // A function replacement, so "$&" in an order id is inserted literally.
+  for (const k in vars || {}) s = s.replace("{" + k + "}", () => vars[k]);
   return s;
+}
+
+/* Set translated text and remember the key, so a language switch can
+ * re-render it. Elements written this way are only ever written this way. */
+function setText(el, key, vars) {
+  el.dataset.i18n = key;
+  if (vars) el.dataset.i18nVars = JSON.stringify(vars);
+  else delete el.dataset.i18nVars;
+  el.textContent = t(key, vars);
 }
 
 const STEPS = [
@@ -91,12 +131,12 @@ if (params.get("cls")) $("skuClass").value = params.get("cls");
 if (params.get("serial")) $("serialPattern").value = params.get("serial");
 
 function applyLang() {
-  document.querySelector("#setup h3").textContent = t("setupTitle");
-  $("startBtn").textContent = t("begin");
-  $("scanQrBtn").textContent = t("scanQr");
-  $("abortBtn").textContent = t("abort");
-  if (modelsReady === true) $("modelStatus").textContent = t("modelsLoaded");
+  document.documentElement.lang = lang;
+  for (const el of document.querySelectorAll("[data-i18n]")) {
+    el.textContent = t(el.dataset.i18n, el.dataset.i18nVars ? JSON.parse(el.dataset.i18nVars) : undefined);
+  }
   $("langBtn").textContent = lang === "en" ? "हिंदी" : "English";
+  $("langBtn").lang = lang === "en" ? "hi" : "en";
 }
 
 $("langBtn").addEventListener("click", () => {
@@ -121,10 +161,10 @@ applyLang();
 Promise.all([loadDetector(), loadOcr()])
   .then(() => {
     modelsReady = true;
-    $("modelStatus").textContent = t("modelsLoaded");
+    setText($("modelStatus"), "modelsLoaded");
   })
   .catch((e) => {
-    $("modelStatus").textContent = "Model load failed (" + e.message + "). Capture still runs; detection and OCR will be marked unavailable.";
+    setText($("modelStatus"), "modelsFailed", { err: e?.message || String(e) });
     modelsReady = "failed";
   });
 
@@ -163,17 +203,17 @@ async function scanDispatchQr() {
   const status = $("qrScanStatus");
   status.style.display = "block";
   if (typeof jsQR === "undefined") {
-    status.textContent = "The QR decoder did not load. Enter the order manually.";
+    setText(status, "qrNoDecoder");
     return;
   }
   let stream;
   try {
     stream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: "environment", width: { ideal: 1280 } } });
   } catch (e) {
-    status.textContent = "No camera available for scanning. Enter the order manually.";
+    setText(status, "qrNoCamera");
     return;
   }
-  status.textContent = "Point the camera at the dispatch QR...";
+  setText(status, "qrPoint");
   $("scanQrBtn").disabled = true;
   const video = document.createElement("video");
   video.srcObject = stream;
@@ -183,7 +223,7 @@ async function scanDispatchQr() {
   const stop = () => stream.getTracks().forEach((t) => t.stop());
   const deadline = Date.now() + 30000;
   const tick = () => {
-    if (Date.now() > deadline) { stop(); status.textContent = "No QR found in 30 seconds. Enter the order manually."; $("scanQrBtn").disabled = false; return; }
+    if (Date.now() > deadline) { stop(); setText(status, "qrTimeout"); $("scanQrBtn").disabled = false; return; }
     if (video.readyState >= 2) {
       c.width = video.videoWidth; c.height = video.videoHeight;
       const ctx = c.getContext("2d", { willReadFrequently: true });
@@ -200,7 +240,7 @@ async function scanDispatchQr() {
         if (p.get("cls")) $("skuClass").value = p.get("cls");
         if (p.get("serial")) $("serialPattern").value = p.get("serial");
         state.scannedParams = p;
-        status.textContent = "Order bound from dispatch QR: " + (p.get("order") || "unknown") + ". Begin capture when ready.";
+        setText(status, "qrBound", { order: p.get("order") || "unknown" });
         $("scanQrBtn").disabled = false;
         return;
       }
@@ -228,7 +268,7 @@ async function startCapture() {
     new RegExp(serialPattern);
   } catch {
     state.scripted = false;
-    $("setupError").textContent = t("badPattern");
+    setText($("setupError"), "badPattern");
     $("setupError").style.display = "block";
     return;
   }
@@ -284,9 +324,8 @@ async function startCapture() {
 
   if (state.scripted) {
     $("simNote").style.display = "block";
-    $("simNote").querySelector("h3").textContent = "Scripted demo";
-    $("simNote").querySelector("p").textContent =
-      "Auto-running a clean verified capture for demonstration. The hash chain, Merkle root and signature are real; the detection and serial are injected and the manifest records them as scripted-demo, so the evidence never claims more than was seen.";
+    setText($("simNote").querySelector("h3"), "scriptedTitle");
+    setText($("simNote").querySelector("p"), "scriptedBody");
     runScriptedTo("seal", 2600);
     runScriptedTo("open", 5600);
     runScriptedTo("reveal", 8600);
@@ -653,9 +692,7 @@ function showResult(m) {
   const ok = m.verdict.overall === "VERIFIED";
   $("verdictTitle").textContent = m.verdict.overall;
   $("verdictTitle").style.color = ok ? "var(--brand)" : "var(--warn)";
-  $("verdictSub").textContent = ok
-    ? "All checks passed. Return window active for 7 days. This manifest is dispute-ready evidence."
-    : "Capture completed and signed, but one or more checks did not pass. The manifest records exactly what was seen.";
+  setText($("verdictSub"), ok ? "okSub" : "flaggedSub");
 
   const rows = [
     ["Seal confirmed on camera", m.verdict.sealConfirmed, "Buyer confirmed intact seal during recorded capture"],
@@ -696,7 +733,7 @@ function showResult(m) {
     const url = await manifestToLink(m, new URL("verify.html", location.href).href);
     try {
       await navigator.clipboard.writeText(url);
-      $("shareLink").textContent = "Link copied (" + Math.round(url.length / 1024) + " KB)";
+      setText($("shareLink"), "linkCopied", { kb: Math.round(url.length / 1024) });
     } catch {
       window.open(url, "_blank");
     }
