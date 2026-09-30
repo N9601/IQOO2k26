@@ -186,7 +186,7 @@ $("reportBtn").addEventListener("click", () => {
 $("ondcBtn").addEventListener("click", async () => {
   if (!current) return;
   const { manifestToOndcIssue } = await import("./ondc.js");
-  const payload = manifestToOndcIssue(current, location.href.split("#")[0]);
+  const payload = manifestToOndcIssue(current, location.href.split("#")[0], lastResults.every((r) => r.ok));
   const a = document.createElement("a");
   a.href = URL.createObjectURL(new Blob([JSON.stringify(payload, null, 2)], { type: "application/json" }));
   a.download = `ondc-issue-${current.order?.id || "manifest"}.json`;

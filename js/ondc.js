@@ -6,7 +6,9 @@
  * the network participant during integration.
  */
 
-export function manifestToOndcIssue(m, verifyLink) {
+/* integrityOk is the verifier's result for this exact manifest: a capture
+ * verdict means nothing once the signature or chain checks have failed. */
+export function manifestToOndcIssue(m, verifyLink, integrityOk) {
   const now = new Date().toISOString();
   const flagged = m.verdict?.overall !== "VERIFIED";
   return {
@@ -33,7 +35,9 @@ export function manifestToOndcIssue(m, verifyLink) {
         description: {
           // A VERIFIED capture shows the right item arriving intact, which
           // contradicts a return claim; a FLAGGED one recorded the problem.
-          short_desc: flagged
+          short_desc: !integrityOk
+            ? "Truthbox evidence failed integrity verification and supports neither side"
+            : flagged
             ? "Return claim supported by Truthbox verified-unboxing evidence"
             : "Return claim contested: Truthbox verified-unboxing evidence contradicts the claim",
           long_desc:
@@ -51,6 +55,7 @@ export function manifestToOndcIssue(m, verifyLink) {
         expected_resolution_time: { duration: "P1D" },
         evidence: {
           truthbox_protocol: m.truthbox,
+          integrity_verified: integrityOk === true,
           merkle_root: m.chain?.merkleRoot,
           chain_head: m.chain?.head,
           signature: m.signature?.value,
