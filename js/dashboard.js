@@ -95,10 +95,31 @@ renderFunnel();
 
 /* ---------- dispatch QR ---------- */
 
+/* The seller's record of the nonce printed for each order. A manifest for
+ * an order issued here must carry that exact nonce; any other nonce means
+ * the capture did not start from this parcel's QR, i.e. a replay. */
+function issuedNonces() {
+  try {
+    const all = JSON.parse(localStorage.getItem("tb-nonces") || "{}");
+    return all && typeof all === "object" ? all : {};
+  } catch {
+    return {};
+  }
+}
+
+function recordNonce(order, nonce) {
+  try {
+    const all = issuedNonces();
+    all[order] = nonce;
+    localStorage.setItem("tb-nonces", JSON.stringify(all));
+  } catch {}
+}
+
 $("qOrder").value = "TB-2026-" + String(Math.floor(100000 + Math.random() * 900000));
 
 $("qrBtn").addEventListener("click", () => {
   const nonce = hex(crypto.getRandomValues(new Uint8Array(16)));
+  recordNonce($("qOrder").value.trim(), nonce);
   const url = new URL("capture.html", location.href);
   url.searchParams.set("order", $("qOrder").value.trim());
   url.searchParams.set("cls", $("qClass").value);
@@ -182,13 +203,16 @@ async function ingest(f) {
   try { m = JSON.parse(await f.text()); } catch { dz.textContent = "Not valid JSON: " + f.name; return "error"; }
   if (!m || typeof m !== "object" || Array.isArray(m)) { dz.textContent = "Not a Truthbox manifest: " + f.name; return "error"; }
   const { ok } = await verifyManifest(m);
-  const status = !ok ? "rejected" : m.verdict?.overall === "VERIFIED" ? "verified" : "flagged";
+  const issued = issuedNonces();
+  const replay = Object.hasOwn(issued, m.order?.id) && issued[m.order.id] !== m.order?.nonce;
+  const status = !ok || replay ? "rejected" : m.verdict?.overall === "VERIFIED" ? "verified" : "flagged";
   const row = {
     order: m.order?.id || "unknown",
     item: m.vision?.detection?.label || m.order?.expectedClass || "-",
     serial: m.verdict?.serial || "none read",
-    evidence: `manifest, ${m.chain?.links?.length || 0} frames` + (m.video ? " + video" : "") +
-      (m.capture?.scripted ? ", scripted demo" : m.capture?.simulated ? ", simulated feed" : ""),
+    evidence: replay ? "nonce does not match the dispatch QR (replayed capture)"
+      : `manifest, ${m.chain?.links?.length || 0} frames` + (m.video ? " + video" : "") +
+        (m.capture?.scripted ? ", scripted demo" : m.capture?.simulated ? ", simulated feed" : ""),
     status,
   };
   try {
@@ -197,8 +221,10 @@ async function ingest(f) {
     localStorage.setItem("tb-inbox", JSON.stringify(saved.slice(0, 20)));
   } catch {}
   renderRows();
-  dz.textContent = ok
-    ? "Manifest verified and ingested: " + row.order
-    : "Manifest REJECTED (integrity failure) and logged: " + row.order;
+  dz.textContent = !ok
+    ? "Manifest REJECTED (integrity failure) and logged: " + row.order
+    : replay
+    ? "Manifest REJECTED (nonce does not match the QR issued for this order) and logged: " + row.order
+    : "Manifest verified and ingested: " + row.order;
   return status;
 }
