@@ -130,8 +130,11 @@ $("qrBtn").addEventListener("click", () => {
     if ($("qDimH").value.trim()) url.searchParams.set("dimh", $("qDimH").value.trim());
     url.searchParams.set("qrmm", $("qQrMm").value.trim() || "30");
   }
+  // If the QR library failed to load, still hand out the bound link.
+  const qrReady = typeof QRCode !== "undefined";
   $("qrbox").innerHTML = "";
-  new QRCode($("qrbox"), { text: url.href, width: 164, height: 164, correctLevel: QRCode.CorrectLevel.M });
+  $("qrbox").style.display = qrReady ? "" : "none";
+  if (qrReady) new QRCode($("qrbox"), { text: url.href, width: 164, height: 164, correctLevel: QRCode.CorrectLevel.M });
   $("qrlink").textContent = url.href;
   $("qrlink").href = url.href;
   $("qrResult").style.display = "flex";
