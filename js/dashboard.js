@@ -177,6 +177,9 @@ renderRows();
 
 const dz = $("inboxDrop");
 dz.addEventListener("click", () => $("inboxFile").click());
+dz.addEventListener("keydown", (e) => {
+  if (e.key === "Enter" || e.key === " ") { e.preventDefault(); $("inboxFile").click(); }
+});
 $("inboxFile").addEventListener("change", (e) => ingestMany(e.target.files));
 dz.addEventListener("dragover", (e) => { e.preventDefault(); dz.classList.add("over"); });
 dz.addEventListener("dragleave", () => dz.classList.remove("over"));

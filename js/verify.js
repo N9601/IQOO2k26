@@ -30,6 +30,10 @@ function showLoadError(msg) {
 
 const drop = $("drop");
 drop.addEventListener("click", () => $("fileInput").click());
+// A div, so Enter and Space are wired by hand for keyboard users.
+drop.addEventListener("keydown", (e) => {
+  if (e.key === "Enter" || e.key === " ") { e.preventDefault(); $("fileInput").click(); }
+});
 drop.addEventListener("dragover", (e) => { e.preventDefault(); drop.classList.add("over"); });
 drop.addEventListener("dragleave", () => drop.classList.remove("over"));
 drop.addEventListener("drop", (e) => {
