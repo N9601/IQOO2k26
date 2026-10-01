@@ -13,7 +13,7 @@
   --line-strong: #3a3a33;
   --text: #f2f1ec;
   --text-dim: #a5a297;
-  --faint: #6e6b61;
+  --faint: #8a877c; /* 4.75:1 on cards, WCAG AA for the small labels it colors */
   --brand: #3fbf7f;
   --brand-dim: #2a8f5c;
   --brand-soft: rgba(63, 191, 127, 0.10);

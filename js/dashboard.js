@@ -87,7 +87,7 @@ function renderFunnel() {
     out += `<text x="${labelW - 12}" y="${y + h / 2 + 4}" text-anchor="end" font-size="12.5" fill="#a5a297">${f.label}</text>`;
     out += `<path d="M${labelW},${y} h${Math.max(0, w - 4)} a4,4 0 0 1 4,4 v${h - 8} a4,4 0 0 1 -4,4 h${-Math.max(0, w - 4)} z" fill="${f.c}"><title>${f.label}: ${f.v}${pct ? " (" + pct + ")" : ""}</title></path>`;
     out += `<text x="${labelW + w + 10}" y="${y + h / 2 + 4}" font-size="12.5" font-weight="700" fill="#f2f1ec">${f.v.toLocaleString("en-IN")}</text>`;
-    if (pct) out += `<text x="${labelW + w + 10}" y="${y + h / 2 + 18}" font-size="10" fill="#6e6b61">${pct}</text>`;
+    if (pct) out += `<text x="${labelW + w + 10}" y="${y + h / 2 + 18}" font-size="10" fill="#8a877c">${pct}</text>`;
   });
   $("funnel").innerHTML = `<svg viewBox="0 0 ${W} ${H}" role="img" aria-label="Returns funnel: 3120 deliveries, 2847 verified, 214 claims, 151 auto-cleared, 63 flagged">${out}</svg>`;
 }

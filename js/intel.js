@@ -98,13 +98,13 @@ function renderNetwork() {
     const bad = c.risk >= 0.5 && c.claims >= 2;
     const r = 5 + c.claims * 1.4;
     nodes += `<circle cx="${cx}" cy="${y}" r="${r}" fill="${bad ? "rgba(224,108,108,0.15)" : "rgba(63,191,127,0.12)"}" stroke="${bad ? "#e06c6c" : "#2a8f5c"}" stroke-width="1.5"><title>${c.id}: ${c.claims} claims, ${c.flagged} flagged, risk ${(c.risk * 100).toFixed(0)}%</title></circle>`;
-    nodes += `<text x="${cx + r + 8}" y="${y + 4}" font-size="11.5" font-family="monospace" fill="${bad ? "#e06c6c" : "#6e6b61"}">${c.id}${bad ? " !" : ""}</text>`;
+    nodes += `<text x="${cx + r + 8}" y="${y + 4}" font-size="11.5" font-family="monospace" fill="${bad ? "#e06c6c" : "#8a877c"}">${c.id}${bad ? " !" : ""}</text>`;
   });
 
   $("network").innerHTML =
     `<svg viewBox="0 0 ${W} ${H}" role="img" aria-label="Bipartite network of brands and claimants; red edges are flagged claims converging on a few repeat claimant nodes">
-      <text x="${bx}" y="20" text-anchor="middle" font-size="11" letter-spacing="2" fill="#6e6b61">BRANDS</text>
-      <text x="${cx}" y="20" text-anchor="middle" font-size="11" letter-spacing="2" fill="#6e6b61">CLAIMANT HASHES</text>
+      <text x="${bx}" y="20" text-anchor="middle" font-size="11" letter-spacing="2" fill="#8a877c">BRANDS</text>
+      <text x="${cx}" y="20" text-anchor="middle" font-size="11" letter-spacing="2" fill="#8a877c">CLAIMANT HASHES</text>
       ${edges}${nodes}
     </svg>`;
 }
