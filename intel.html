@@ -55,7 +55,7 @@
       <thead><tr><th>Claimant hash</th><th>Brands hit</th><th>Claims</th><th>Flagged</th><th>Risk</th></tr></thead>
       <tbody></tbody>
     </table>
-    <p class="sub" style="margin-top:12px">Risk model: share of flagged claims, weighted up when the same identifier appears across multiple brands. No single brand can see this pattern in its own data; four of the claimants below look clean to every individual brand they hit. Production aggregation runs under differential privacy so membership in the blacklist is provable only above a claim threshold.</p>
+    <p class="sub" style="margin-top:12px">Risk model: share of flagged claims, weighted up when the same identifier appears across multiple brands. No single brand can see this pattern in its own data; two of the four offenders below (77aa and 99cc) file at most one claim per brand, so they look clean to every individual brand they hit. Production aggregation runs under differential privacy so membership in the blacklist is provable only above a claim threshold.</p>
   </div>
 
   <div class="spacer"></div>
