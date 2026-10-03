@@ -97,7 +97,7 @@ Everything left of the crypto boundary stays on the device: raw frames, detectio
 | Post-hoc manifest edit | Merkle root changes, signature no longer verifies |
 | Replay of an old capture | Manifest bound to the per-order nonce in the seller QR |
 | Clock rollback | Monotonic performance clock deltas recorded per frame |
-| Fabricated manifest | Signature verification fails without the capture key |
+| Fabricated manifest | Production: the signing key is hardware-attested (Android Keystore + Play Integrity), so a manifest signed by any other key is rejected. This web build cannot attest its key, so it proves integrity, not device origin (PROTOCOL.md, section 7) |
 
 ## Roadmap
 
