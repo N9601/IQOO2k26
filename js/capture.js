@@ -33,6 +33,7 @@ const I18N = {
     setupTitle: "Verified unboxing", begin: "Begin capture", scanQr: "Scan dispatch QR instead", abort: "Abort",
     modelsLoaded: "On-device models loaded. Nothing you record will leave this phone.",
     badPattern: "The serial pattern is not a valid regular expression. Fix it before starting.",
+    insecure: "This page was opened over plain HTTP, so the browser withholds the camera and signing keys. Open it over HTTPS to capture.",
     setupIntro: "Confirm the order this capture is bound to. In production this arrives via the Truthbox QR printed on the parcel and cannot be edited.",
     orderLabel: "Order ID", skuLabel: "Expected item (SKU visual class)", serialLabel: "Expected serial pattern (regex)",
     demo: "Run scripted demo (no camera needed)", modelsLoading: "Loading on-device models...",
@@ -60,6 +61,7 @@ const I18N = {
     setupTitle: "सत्यापित अनबॉक्सिंग", begin: "कैप्चर शुरू करें", scanQr: "डिस्पैच QR स्कैन करें", abort: "रद्द करें",
     modelsLoaded: "मॉडल डिवाइस पर लोड हो गए। आपकी कोई रिकॉर्डिंग फोन से बाहर नहीं जाएगी।",
     badPattern: "सीरियल पैटर्न सही रेगुलर एक्सप्रेशन नहीं है। शुरू करने से पहले इसे ठीक करें।",
+    insecure: "यह पेज सादे HTTP पर खुला है, इसलिए ब्राउजर कैमरा और हस्ताक्षर कुंजी नहीं देता। कैप्चर के लिए इसे HTTPS पर खोलें।",
     setupIntro: "पुष्टि करें कि यह कैप्चर किस ऑर्डर से जुड़ा है। असली इस्तेमाल में यह पार्सल पर छपे Truthbox QR से आता है और बदला नहीं जा सकता।",
     orderLabel: "ऑर्डर आईडी", skuLabel: "अपेक्षित सामान (SKU श्रेणी)", serialLabel: "अपेक्षित सीरियल पैटर्न (regex)",
     demo: "स्क्रिप्टेड डेमो चलाएं (कैमरे की जरूरत नहीं)", modelsLoading: "डिवाइस पर मॉडल लोड हो रहे हैं...",
@@ -158,6 +160,14 @@ $("langBtn").addEventListener("click", () => {
 
 let modelsReady = false;
 applyLang();
+
+// WebCrypto signing exists only in a secure context. Without it the
+// capture could never be sealed, so say why up front instead of stalling.
+if (!window.isSecureContext || !crypto.subtle) {
+  setText($("setupError"), "insecure");
+  $("setupError").style.display = "block";
+  for (const id of ["startBtn", "scanQrBtn", "demoBtn"]) $(id).disabled = true;
+}
 Promise.all([loadDetector(), loadOcr()])
   .then(() => {
     modelsReady = true;
