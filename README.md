@@ -36,7 +36,7 @@ Or locally (static site, no build step, no server-side code):
 python -m http.server 8080
 ```
 
-Then open http://localhost:8080 on a phone or laptop.
+Then open http://localhost:8080 in a desktop browser. Camera access and WebCrypto signing need a secure context (HTTPS or localhost), so a phone pointed at your laptop's LAN address over plain HTTP cannot sign; test on a phone with the live HTTPS site instead.
 
 - `capture.html` - buyer-side guided unboxing capture (English and Hindi)
 - `verify.html` - drop a manifest or open a verification link; edit one byte and watch it fail
