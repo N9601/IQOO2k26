@@ -56,7 +56,7 @@ Then open http://localhost:8080 on a phone or laptop.
 | Signed snapshots | JPEG stills at seal, reveal and label, hashed inside the signed manifest |
 | Proof video | MediaRecorder capture, SHA-256 in the manifest |
 | Signing | Non-extractable ECDSA P-256 via WebCrypto over canonical JSON |
-| Verification | Five independent checks, chain visualizer, tamper lab with five attacks |
+| Verification | Five independent checks, chain visualizer, tamper lab with six attacks |
 | Verification links | Manifest gzip-compressed into a URL fragment, verified on open, never sent to a server |
 | Dispute report | Print-ready evidence record with photos and cryptographic anchors |
 | Fraud intelligence | Claims clustered by salted claimant hash across brands, risk-weighted by spread |
