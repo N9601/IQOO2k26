@@ -53,6 +53,13 @@ The manifest is JSON with these top-level fields:
 
 The signed payload is the manifest with the `signature` field removed, serialized as canonical JSON: object keys sorted lexicographically at every depth, no insignificant whitespace, arrays in order. The signature is ECDSA P-256 with SHA-256 over the UTF-8 bytes of that serialization.
 
+Details an independent implementation must match exactly:
+
+- Keys are compared by UTF-16 code units (the default JavaScript sort), not by code point.
+- Strings and numbers are written exactly as ECMAScript `JSON.stringify` writes them: shortest round-trip number form (`1e+21`, `0.30000000000000004`), `-0` as `0`, non-ASCII characters unescaped.
+- `signature.value` is standard base64 (with padding) of the raw 64-byte `r || s` signature (IEEE P1363, as WebCrypto produces), not a DER-encoded signature.
+- `signature.publicKeyJwk` is a JWK with `kty: "EC"`, `crv: "P-256"` and base64url `x` and `y` coordinates.
+
 The verdict, timestamps, order binding, nonce, chain and video hash are all inside the signed payload. Nothing about the capture can be upgraded, backdated or rebound after signing.
 
 ## 6. Verification algorithm
