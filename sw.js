@@ -41,20 +41,23 @@ self.addEventListener("activate", (e) => {
   );
 });
 
+const store = (key, res) => caches.open(CACHE).then((c) => c.put(key, res)).catch(() => {});
+
 self.addEventListener("fetch", (e) => {
   if (e.request.method !== "GET") return;
-  const sameOrigin = new URL(e.request.url).origin === location.origin;
-  if (sameOrigin) {
-    // Network-first for our own files so deploys show up immediately;
-    // the cache still serves the whole app when offline.
+  const url = new URL(e.request.url);
+  if (url.origin === location.origin) {
+    // Network-first for our own files. They are static, so the query string
+    // (a dispatch QR's order and nonce) never changes the response: cache and
+    // look up without it, so a QR link never opened before still loads offline.
+    const key = url.origin + url.pathname;
     e.respondWith(
       fetch(e.request)
         .then((res) => {
-          const copy = res.clone();
-          caches.open(CACHE).then((c) => c.put(e.request, copy)).catch(() => {});
+          store(key, res.clone());
           return res;
         })
-        .catch(() => caches.match(e.request))
+        .catch(() => caches.match(key))
     );
   } else {
     // Cache-first for CDN runtimes and model weights: large, versioned,
