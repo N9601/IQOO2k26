@@ -8,7 +8,7 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
 import {
-  sha256, hex, unhex, canonicalJson, HashChain, merkleRoot,
+  sha256, hex, unhex, unb64, canonicalJson, HashChain, merkleRoot,
   generateSigningKey, signManifest, verifyManifest,
 } from "../js/crypto.js";
 
@@ -129,6 +129,16 @@ test("a signed manifest verifies clean", async () => {
   const { ok, results } = await verifyManifest(m);
   assert.equal(ok, true, JSON.stringify(results, null, 2));
   assert.equal(results.length, 5);
+});
+
+test("signature and key use the encodings PROTOCOL.md specifies", async () => {
+  const m = await buildSignedManifest();
+  assert.equal(unb64(m.signature.value).length, 64, "raw r || s, not DER");
+  const { kty, crv, x, y, d } = m.signature.publicKeyJwk;
+  assert.deepEqual([kty, crv], ["EC", "P-256"]);
+  assert.match(x, /^[A-Za-z0-9_-]{43}$/);
+  assert.match(y, /^[A-Za-z0-9_-]{43}$/);
+  assert.equal(d, undefined, "the private scalar never leaves the key");
 });
 
 test("editing any field breaks the signature", async () => {
