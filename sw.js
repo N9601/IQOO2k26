@@ -1,9 +1,10 @@
-/* Truthbox service worker: cache-first so the capture flow, models and
- * crypto pipeline keep working with no connectivity after first load.
- * Evidence is produced entirely offline; only manifest delivery needs a
- * network, and that can happen later. */
+/* Truthbox service worker: the capture flow, models and crypto pipeline
+ * keep working with no connectivity after first load. The app's own files
+ * are network-first so deploys show up at once; CDN runtimes and model
+ * weights are cache-first. Evidence is produced entirely offline; only
+ * manifest delivery needs a network, and that can happen later. */
 
-const CACHE = "truthbox-v7";
+const CACHE = "truthbox-v8";
 const CORE = [
   "./",
   "./index.html",
@@ -22,6 +23,8 @@ const CORE = [
   "./js/intel.js",
   "./js/report.js",
   "./js/share.js",
+  "./js/ondc.js",
+  "./js/html.js",
   "./icons/icon.svg",
   "./manifest.webmanifest",
 ];
