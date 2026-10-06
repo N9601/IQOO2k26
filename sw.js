@@ -54,7 +54,7 @@ self.addEventListener("fetch", (e) => {
     e.respondWith(
       fetch(e.request)
         .then((res) => {
-          store(key, res.clone());
+          if (res.ok) store(key, res.clone());
           return res;
         })
         .catch(() => caches.match(key))
@@ -62,13 +62,14 @@ self.addEventListener("fetch", (e) => {
   } else {
     // Cache-first for CDN runtimes and model weights: large, versioned,
     // immutable, and the reason the app works offline after first load.
+    // Error responses are never cached; opaque ones (script tags load in
+    // no-cors mode) cannot be inspected and are kept.
     e.respondWith(
       caches.match(e.request).then(
         (hit) =>
           hit ||
           fetch(e.request).then((res) => {
-            const copy = res.clone();
-            caches.open(CACHE).then((c) => c.put(e.request, copy)).catch(() => {});
+            if (res.ok || res.type === "opaque") store(e.request, res.clone());
             return res;
           })
       )
