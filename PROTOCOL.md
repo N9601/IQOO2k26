@@ -1,6 +1,6 @@
 # Truthbox evidence protocol v1.0
 
-This document specifies the manifest format and the verification algorithm. Any party can implement a verifier from this page alone; the reference implementation is `js/crypto.js` (under 200 lines).
+This document specifies the manifest format and the verification algorithm. Any party can implement a verifier from this page alone; the reference implementation is `js/crypto.js` (about 220 lines, no dependencies).
 
 ## 1. Frame hash chain
 

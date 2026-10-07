@@ -36,7 +36,7 @@ The Verify page has a tamper lab: generate a signed manifest, then try to fake i
 
 ## Tech
 
-Static PWA, no backend. WebCrypto (ECDSA P-256, SHA-256), TensorFlow.js (COCO-SSD), Tesseract.js (OCR), jsQR (QR decode and dimensional calibration). Installable, works offline after first load. Chain-of-custody core is under 200 lines with an 11-test suite and CI.
+Static PWA, no backend. WebCrypto (ECDSA P-256, SHA-256), TensorFlow.js (COCO-SSD), Tesseract.js (OCR), jsQR (QR decode and dimensional calibration). Installable, works offline after first load. Chain-of-custody core is about 220 lines with a 33-test suite and CI.
 
 ## Roadmap
 
