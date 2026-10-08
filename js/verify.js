@@ -213,8 +213,10 @@ function renderViz(results) {
   for (let i = 1; i < links.length; i++) {
     if (links[i]?.m < links[i - 1]?.m) { badIdx = i; break; }
   }
-  const merkleOk = by["Merkle root"] !== false;
-  const headOk = by["Chain head"] !== false;
+  // Fail closed: a check that never ran (the chain was missing or
+  // malformed) is not shown as intact.
+  const merkleOk = by["Merkle root"] === true;
+  const headOk = by["Chain head"] === true;
 
   let html = "";
   for (let k = 0; k < N; k++) {
@@ -227,7 +229,7 @@ function renderViz(results) {
   }
   strip.innerHTML = html;
 
-  const sigOk = by["ECDSA signature"] !== false;
+  const sigOk = by["ECDSA signature"] === true;
   $("vizTail").innerHTML =
     `<span class="lnk">${links.length} links -&gt;</span>` +
     `<span class="node${merkleOk && headOk ? "" : " bad"}">MERKLE ROOT ${merkleOk && headOk ? "intact" : "BROKEN"}</span>` +
