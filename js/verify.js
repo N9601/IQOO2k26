@@ -202,7 +202,8 @@ $("ondcBtn").addEventListener("click", async () => {
 
 function renderViz(results) {
   const by = Object.fromEntries(results.map((r) => [r.check, r.ok]));
-  const links = current.chain?.links || [];
+  // Only a real array: a hostile {"length": "<img ...>"} must not reach the markup below.
+  const links = Array.isArray(current.chain?.links) ? current.chain.links : [];
   const strip = $("vizStrip");
   const N = Math.min(links.length, 96);
   const step = links.length / N || 1;
