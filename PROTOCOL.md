@@ -39,14 +39,14 @@ The manifest is JSON with these top-level fields:
 | `truthbox` | protocol version, `"1.0"` |
 | `order` | `id`, one-time `nonce` issued in the seller QR at dispatch, `expectedClass`, `serialPattern` |
 | `device` | user agent, platform, language |
-| `capture` | start/end ISO timestamps, frame count, hash rate, `simulated` flag |
+| `capture` | start/end ISO timestamps, frame count, hash rate, `simulated` flag (synthetic camera feed), `scripted` flag (scripted demo: detection and serial injected, not observed) |
 | `steps` | append-only log of the five capture steps with per-step evidence and the frame index at which each completed |
 | `vision` | detection engine and best detection `{label, score}` |
 | `ocr` | OCR engine, serial candidates, matched serial, confidence |
 | `video` | SHA-256, byte size and MIME type of the recorded proof video, or null |
 | `snapshots` | JPEG stills captured at the seal, reveal and label steps as data URLs, each with its SHA-256; covered by the signature |
 | `chain` | algorithm string, genesis, head, Merkle root, full link list |
-| `verdict` | seal, SKU-match, serial-match booleans and overall `VERIFIED` / `FLAGGED` |
+| `verdict` | seal, SKU-match, serial-match booleans, QR-calibrated `dimensionCheck` (`pass` / `fail` / `unknown`) and overall `VERIFIED` / `FLAGGED` |
 | `signature` | `alg`, public key JWK, base64 ECDSA signature |
 
 ## 5. Signature
